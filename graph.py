@@ -3,8 +3,10 @@
 
     python graph.py q03              # questions.json의 질문 id
     python graph.py "질문 원문"
+    python graph.py s02 --sample     # 공개용 예시 코퍼스(지어낸 자료)로 — DR_SAMPLE=1 과 같다
 
 코퍼스는 scripts/build_corpus.py가 만든 data/corpus.json(로컬 전용)을 읽는다.
+예시 모드는 data/sample_corpus.json · data/sample_questions.json을 읽고 output/sample/에 저장한다(본 실험 기록과 섞이지 않게).
 """
 import json
 import operator
@@ -21,14 +23,27 @@ from langgraph.types import Send
 ROOT = Path(__file__).resolve().parent
 설정 = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
 
+# 예시 모드: import할 때 코퍼스를 읽으므로(baseline·app도 이 모듈을 씀) 인자 해석 전에 정한다.
+# 환경변수로도 남겨 하위 프로세스·다른 모듈이 같은 모드를 보게 한다.
+# 주의: sys.argv는 이 모듈을 import한 프로그램의 인자다 — 다른 도구에서 '--sample'을 다른 뜻으로 쓰면 안 된다(app.py도 같은 조건)
+SAMPLE = os.environ.get("DR_SAMPLE") == "1" or "--sample" in sys.argv
+if SAMPLE:
+    os.environ["DR_SAMPLE"] = "1"
+CORPUS_FILE = ROOT / "data" / ("sample_corpus.json" if SAMPLE else "corpus.json")
+QUESTIONS_FILE = ROOT / "data" / ("sample_questions.json" if SAMPLE else "questions.json")
+OUT = ROOT / "output" / "sample" if SAMPLE else ROOT / "output"
+
 # ---------------------------------------------------------------- 코퍼스 · 청크
-if not (ROOT / "data" / "corpus.json").exists():
+if SAMPLE and not CORPUS_FILE.exists():
+    raise SystemExit(f"{CORPUS_FILE.relative_to(ROOT).as_posix()}이 없다 — python scripts/make_sample_corpus.py 로 다시 만든다")
+if not CORPUS_FILE.exists():
     raise SystemExit(
-        "data/corpus.json이 없다. 자막·규정 원문은 저작물이라 저장소에 올리지 않았다.\n"
+        f"{CORPUS_FILE.relative_to(ROOT).as_posix()}이 없다. 자막·규정 원문은 저작물이라 저장소에 올리지 않았다.\n"
         "- 원본이 있는 PC: python scripts/build_corpus.py\n"
-        "- 원본이 없으면: 문서 목록·글자 수·links는 data/corpus_index.json, 실행 결과는 output/ 에서 볼 수 있다\n"
+        "- 원본이 없으면: 예시 코퍼스(지어낸 자료)로 끝까지 돌려 볼 수 있다: python graph.py s02 --sample\n"
+        "  문서 목록·글자 수·links는 data/corpus_index.json, 실행 결과는 output/ 에서 볼 수 있다\n"
         "  (데모 화면은 코퍼스 없이도 뜬다: streamlit run app.py)")
-CORPUS = json.loads((ROOT / "data" / "corpus.json").read_text(encoding="utf-8"))
+CORPUS = json.loads(CORPUS_FILE.read_text(encoding="utf-8"))
 DOCS, META, LINKS = CORPUS["docs"], CORPUS["meta"], CORPUS["links"]
 
 
@@ -112,7 +127,7 @@ def render(cid):
     return head + "\n" + "\n".join(f"[큐 {n} | {st}] {tx}" for n, _, st, tx, _ in CUES[doc] if a <= n <= b)
 
 
-QUESTIONS = {q["id"]: q for q in json.loads((ROOT / "data" / "questions.json").read_text(encoding="utf-8"))["questions"]}
+QUESTIONS = {q["id"]: q for q in json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))["questions"]}
 
 # ---------------------------------------------------------------- 비용 카운터
 COST = {"calls": 0, "coord_chars": 0, "sub_chars": 0, "retry": 0, "json_fail": 0}
@@ -210,6 +225,7 @@ def _is_track(seed):
 
 
 OPTIONAL_RULES = {"작업자 자료: SDH 효과음 예시", "작업자 자료: 표기·맞춤법·번역", "넷플릭스 스타일 가이드: 일반 요구사항"}
+OPTIONAL_RULES |= {t for t, m in META.items() if m.get("보조")}   # 예시 코퍼스는 meta에 '보조'로 표시한다
 
 
 def required_rules(track):
@@ -940,7 +956,7 @@ def save(out, qid, tag):
     - output/runs.jsonl 한 줄 + output/reports/*.md: 저장소에 올리는 것. 메모(자막 원문 발췌가 많음)는 빼고 길이만 남긴다
     - output/runs/*.json: 메모까지 전부. 로컬 전용(gitignore) — 데모 화면에서 '무엇을 읽었나'를 펼쳐 볼 때 쓴다"""
     import datetime
-    od = ROOT / "output"
+    od = OUT
     for sub in ("reports", "runs"):
         (od / sub).mkdir(parents=True, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -955,8 +971,13 @@ def save(out, qid, tag):
     try:
         _append_locked(od / "runs.jsonl", json.dumps(slim(row), ensure_ascii=False))
     except RuntimeError as e:      # 잠금이 안 풀려도 실행 결과(runs/*.json)는 이미 저장됨 — 실행을 잃지 않는다
-        print(f"경고: runs.jsonl 덧붙이기 실패({e}). output/runs/{name}.json은 저장됨")
+        print(f"경고: runs.jsonl 덧붙이기 실패({e}). {out_dir()}/runs/{name}.json은 저장됨")
     return name
+
+
+def out_dir():
+    """저장 폴더를 저장소 기준 경로로 — '저장: output/reports/…'(ablation.py가 이 줄을 읽음)"""
+    return OUT.relative_to(ROOT).as_posix()
 
 
 def run(question, qid="custom", tag="기본", quiet=False, keep=True):
@@ -983,7 +1004,8 @@ if __name__ == "__main__":
     import argparse
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
-    ap.add_argument("q", nargs="?", default="q03", help="질문 id(q01~q12) 또는 질문 원문")
+    ap.add_argument("q", nargs="?", default="s02" if SAMPLE else "q03", help="질문 id(q01~q12, 예시 모드는 s01~s03) 또는 질문 원문")
+    ap.add_argument("--sample", action="store_true", help="예시 코퍼스로(모듈을 불러올 때 이미 반영됨)")
     ap.add_argument("--off", default="", help="끌 스위치, 쉼표로: 배정검사,남의구역,재위임")
     ap.add_argument("--tag", default="", help="저장 이름표(기본: 끈 스위치로 만듦)")
     ap.add_argument("--no-save", action="store_true")
@@ -997,4 +1019,4 @@ if __name__ == "__main__":
     print(f"스위치: {설정['스위치']}\n\n질문: {q}\n")
     out = run(q, qid, a.tag or ("기본" if not offs else "off-" + "-".join(offs)), keep=not a.no_save)
     if out.get("run"):
-        print(f"\n저장: output/reports/{out['run']}.md")
+        print(f"\n저장: {out_dir()}/reports/{out['run']}.md")

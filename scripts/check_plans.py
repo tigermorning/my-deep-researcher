@@ -3,6 +3,7 @@
 
     PYTHONIOENCODING=utf-8 python scripts/check_plans.py          # 전체 (gpt-4o-mini 12회)
     PYTHONIOENCODING=utf-8 python scripts/check_plans.py q07 q10  # 일부
+    PYTHONIOENCODING=utf-8 python scripts/check_plans.py --sample # 예시 코퍼스 3문항
 """
 import sys
 from pathlib import Path
@@ -11,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import graph as g  # noqa: E402
 
 sys.stdout.reconfigure(encoding="utf-8")
-ids = sys.argv[1:] or list(g.QUESTIONS)
+ids = [a for a in sys.argv[1:] if a != "--sample"] or list(g.QUESTIONS)
 for qid in ids:
     q = g.QUESTIONS[qid]
     p = g.plan({"question": q["question"]})["plan"]

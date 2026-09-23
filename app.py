@@ -4,12 +4,16 @@
     streamlit run app.py
 
 - 지난 실행 보기: output/runs/*.json(로컬 전용, 메모 포함)이 있으면 그것을, 없으면 output/runs.jsonl(메모 길이만)을 읽는다
-- 새로 실행: data/corpus.json(로컬에서 scripts/build_corpus.py로 만듦)과 OpenAI 키가 있어야 한다
+  (예시 모드는 output/sample/ 아래 같은 파일)
+- 새로 실행: data/corpus.json(로컬에서 scripts/build_corpus.py로 만듦, 예시 모드는 data/sample_corpus.json)과 OpenAI 키가 있어야 한다
   키는 환경변수 → .env → ~/Documents/openai_key.env 순, 또는 옆 칸에 붙여 넣는다(이 세션 안에서만 쓰고 저장하지 않음)
+- 예시 코퍼스(지어낸 자료)로: DR_SAMPLE=1 streamlit run app.py (또는 streamlit run app.py -- --sample)
+  → data/sample_*.json을 읽고 output/sample/을 보여 준다
 """
 import json
 import os
 import re
+import sys
 import threading
 from pathlib import Path
 
@@ -18,7 +22,12 @@ import streamlit as st
 import metrics
 
 ROOT = Path(__file__).resolve().parent
-OUT = ROOT / "output"
+SAMPLE = os.environ.get("DR_SAMPLE") == "1" or "--sample" in sys.argv   # graph.py와 같은 조건 — 어긋나면 질문·저장 폴더가 갈린다
+if SAMPLE:
+    os.environ["DR_SAMPLE"] = "1"
+OUT = ROOT / "output" / "sample" if SAMPLE else ROOT / "output"
+CORPUS_FILE = ROOT / "data" / ("sample_corpus.json" if SAMPLE else "corpus.json")
+QUESTIONS_FILE = ROOT / "data" / ("sample_questions.json" if SAMPLE else "questions.json")
 st.set_page_config(page_title="자막 규정 딥리서처", layout="wide")
 
 
@@ -53,11 +62,13 @@ def baseline_budget(qid):
 
 
 def questions():
-    return json.loads((ROOT / "data" / "questions.json").read_text(encoding="utf-8"))["questions"]
+    return json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))["questions"]
 
 
 # ---------------------------------------------------------------- 사이드바: 실행
 st.sidebar.header("새로 실행")
+if SAMPLE:
+    st.sidebar.info("예시 코퍼스 모드 — 플랫폼·작품·규정·대사 전부 지어낸 자료(data/sample_corpus.json)")
 qs = questions()
 pick = st.sidebar.selectbox("질문", [f"{q['id']} [{q['type']}] {q['question'][:40]}…" for q in qs] + ["직접 입력"])
 custom = st.sidebar.text_area("질문 직접 입력", disabled=pick != "직접 입력")
@@ -73,8 +84,10 @@ go = st.sidebar.button("실행", type="primary")
 if go:
     if key:
         os.environ["OPENAI_API_KEY"] = key
-    if not (ROOT / "data" / "corpus.json").exists():
-        st.sidebar.error("data/corpus.json이 없다 — `python scripts/build_corpus.py`로 먼저 만든다")
+    if not CORPUS_FILE.exists():
+        st.sidebar.error(f"{CORPUS_FILE.relative_to(ROOT).as_posix()}이 없다 — "
+                         + ("`python scripts/make_sample_corpus.py`로 다시 만든다" if SAMPLE else
+                            "원본이 있으면 `python scripts/build_corpus.py`, 없으면 예시 코퍼스로: `DR_SAMPLE=1 streamlit run app.py`"))
         st.stop()
     import graph as g                     # 키를 넣은 뒤에 불러온다(불러올 때 키를 확인함)
     if pick == "직접 입력":

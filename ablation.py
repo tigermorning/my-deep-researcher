@@ -20,6 +20,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+if __import__("os").environ.get("DR_SAMPLE") == "1" or "--sample" in sys.argv:
+    # 집계·runs.jsonl 재생성이 output/ 바로 아래(본 실험)를 읽고 쓴다 — 예시 실행이 섞이지 않게 막는다
+    raise SystemExit("ablation.py는 본 코퍼스 전용이다. 예시 코퍼스는 graph.py / baseline.py에 --sample로 돌린다")
 CONFIGS = {"기본": [], "배정검사끔": ["배정검사"], "남의구역끔": ["남의구역"], "재위임끔": ["재위임"]}
 ALARMS = ["허위인용", "범위밖큐", "무근거절", "무효배정"]
 KEYS = ["격리율", "중복률", "규정대조율", "트랙도달률", "읽고안쓴문서", "인용밀도", "인용문일치율", "인용문검사", "예산소진율",

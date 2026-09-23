@@ -3,6 +3,7 @@
 
     python baseline.py q03                 # 예산 = 절수 × (절예산 + 기준예산) = 기본 24청크
     python baseline.py q03 --budget 16     # 팀 실행이 실제로 받은 예산에 맞출 때(ablation.py가 씀)
+    python baseline.py s02 --sample        # 공개용 예시 코퍼스로(graph.py와 같다)
 
 공정성
 - 같은 자료: 코디네이터가 보는 카드 목록을 그대로 보고 출발 자료를 고른다
@@ -116,7 +117,8 @@ if __name__ == "__main__":
     import argparse
     sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
-    ap.add_argument("q", nargs="?", default="q03")
+    ap.add_argument("q", nargs="?", default="s02" if g.SAMPLE else "q03")
+    ap.add_argument("--sample", action="store_true", help="예시 코퍼스로(graph를 불러올 때 이미 반영됨)")
     ap.add_argument("--budget", type=int, default=0)
     ap.add_argument("--tag", default="대조군")
     ap.add_argument("--no-save", action="store_true")
@@ -125,4 +127,4 @@ if __name__ == "__main__":
     q = g.QUESTIONS[a.q]["question"] if a.q in g.QUESTIONS else a.q
     out = run(q, qid, a.budget or None, a.tag, keep=not a.no_save)
     if out.get("run"):
-        print(f"저장: output/reports/{out['run']}.md")
+        print(f"저장: {g.out_dir()}/reports/{out['run']}.md")
