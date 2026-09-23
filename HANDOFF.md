@@ -1,7 +1,7 @@
 # HANDOFF — 딥리서처 에이전트 과제 (모두의연구소 9강 프로젝트)
 
 - 작성: 2026-09-23 (두 세션, 둘 다 tigermorning 블로그 저장소를 작업 폴더로 열고 진행)
-- 상태 (2026-09-23 세 번째 세션): **①~⑥ 전부 구현 · metrics/baseline/ablation/app 완성 · 절제 실험 75실행 완료 · REPORT.md·README.md 작성.** 두 번째 세션 이후 커밋 안 함, 원격 저장소 없음(GitHub 저장소는 아직 안 만듦)
+- 상태 (2026-09-23 세 번째 세션): **①~⑥ 전부 구현 · metrics/baseline/ablation/app 완성 · 절제 실험 75실행 완료 · REPORT.md·README.md 작성.** 커밋 `4126647`, 공개 저장소 https://github.com/tigermorning/my-deep-researcher 에 push 완료
 
 ## 0. 새 세션 시작 절차
 
@@ -339,8 +339,8 @@ my-deep-researcher/
 
 ## 9. 다음 할 일
 
-1. 사용자 확인 후 커밋 → GitHub 저장소 만들고 push → **기본 URL만** 제출
-   - 커밋 전 `git diff --cached --stat`. `.claude/launch.json`(데모 서버 설정)은 올릴지 사용자에게 물을 것
+1. 과제 제출: 저장소 **기본 URL만** — https://github.com/tigermorning/my-deep-researcher
+   - `.claude/launch.json`(데모 서버 설정)은 사용자 결정으로 올리지 않음
 2. (선택) 나머지 7문항(q02·q04~06·q08·q09·q12)도 기본·대조군 1~2회씩 돌려 REPORT 표 보강 — `python ablation.py --qs q04 q08 --reps 2 --replace`
 3. (선택) 회고의 개선안: 집필 단계에서 '큐 N + 인용문'을 코드로 대조해 틀린 문장만 다시 쓰기 / 트랙 종류별 핵심 규정 먼저 읽기
 4. 알려진 작은 문제: `app.py`의 대조군 실행은 기본 예산 24(팀 실제 읽기량과 안 맞춤) · streamlit 세션 둘이 동시에 돌면 스위치·COST 전역을 공유
