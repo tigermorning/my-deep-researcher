@@ -950,6 +950,21 @@ JSON으로만 답하라. 키는 위 문장 번호다: {shape}""", "sub", as_json
     return "\n".join(re.sub(r"(?<=\S)[ \t]{2,}", " ", ln).rstrip() for ln in draft.split("\n")).strip(), rec
 
 
+def cite_rules(got):
+    """인용 규칙 — 팀 조사관(write_section)과 대조군(baseline.write_report)이 **같은 문자열**을 쓴다.
+    문구가 다르면 두 쪽의 인용 차이가 '분업이 없어서'인지 '지시가 달라서'인지 가를 수 없다.
+    (대조군만 남의 예시 «아파트 E09 한국어 SDH» 큐 212와 '(작품 이름 등)'이 빠진 문구를 받고 있었다)"""
+    # 예시 문장에 실제로 읽은 트랙 제목을 넣는다 — 남의 예시(아파트 E09)만 주었더니 번역 절들이 «»를 아예 안 썼다(q10)
+    tr = next((CHUNK_DOC[n["청크"]] for n in got if n["청크"] in CHUNK_TIME), None)
+    example = (f'"…라고 옮겼다(«{tr}» 큐 {CHUNK_CUES[next(n["청크"] for n in got if n["청크"] in CHUNK_TIME)][0]})."'
+               if tr else '"…를 요구한다(«규정 제목» I.8)."')
+    return f"""- 사실을 적는 문장마다 근거 자료를 아래 '인용할 수 있는 자료' 목록의 제목 그대로 «» 안에 적어라. 목록 밖의 이름(작품 이름 등)에는 «»를 쓰지 마라.
+- 트랙 근거는 «제목» 바로 뒤에 '큐 N'을 붙여라. 큐 번호는 그 트랙의 번호여야 한다(짝 트랙 큐를 섞지 마라).
+  예: {example}
+- 인용(«»)이 하나도 없는 원고는 근거 없는 글로 판정된다(평가 지표 무근거절).
+"""
+
+
 def write_section(t, question, notes):
     got = [n for n in notes if not irrelevant(n["메모"])]
     if not got:
@@ -958,10 +973,6 @@ def write_section(t, question, notes):
     memo = "\n\n".join(f"[자료 «{CHUNK_DOC[n['청크']]}» · 청크 {n['청크'].rsplit('#', 1)[-1]}]\n{n['메모']}"
                          for n in got) or "(관련 메모 없음)"
     titles = "\n".join(f"«{d}»" for d in dict.fromkeys(CHUNK_DOC[n["청크"]] for n in got))
-    # 예시 문장에 이 절이 실제로 읽은 트랙 제목을 넣는다 — 남의 예시(아파트 E09)만 주었더니 번역 절들이 «»를 아예 안 썼다(q10)
-    tr = next((CHUNK_DOC[n["청크"]] for n in got if n["청크"] in CHUNK_TIME), None)
-    example = (f'"…라고 옮겼다(«{tr}» 큐 {CHUNK_CUES[next(n["청크"] for n in got if n["청크"] in CHUNK_TIME)][0]})."'
-               if tr else '"…를 요구한다(«규정 제목» I.8)."')
     read = {n["청크"] for n in notes}
     mine = [c for d in t["시작문서"] for c in _chunks_of(d)]
     # 규정만 묻는 절(q01·q02)에 '트랙 사례와 맞대라'를 시키면 없는 트랙을 이유로 부족 신고를 한다(q01 실측)
@@ -974,11 +985,7 @@ def write_section(t, question, notes):
 
 아래 메모만 근거로 보고서의 이 절 원고를 써라.
 - 8~15문장, 700자 이상. 메모에 없는 사실은 쓰지 마라.
-- 사실을 적는 문장마다 근거 자료를 아래 '인용할 수 있는 자료' 목록의 제목 그대로 «» 안에 적어라. 목록 밖의 이름(작품 이름 등)에는 «»를 쓰지 마라.
-- 트랙 근거는 «제목» 바로 뒤에 '큐 N'을 붙여라. 큐 번호는 그 트랙의 번호여야 한다(짝 트랙 큐를 섞지 마라).
-  예: {example}
-- 인용(«»)이 하나도 없는 원고는 근거 없는 글로 판정된다(평가 지표 무근거절).
-{pair}- 읽지 않은 구간에 대해서는 '없다'고 단정하지 마라. 메모에 없는 것은 '확인하지 못했다'고 적어라.
+{cite_rules(got)}{pair}- 읽지 않은 구간에 대해서는 '없다'고 단정하지 마라. 메모에 없는 것은 '확인하지 못했다'고 적어라.
 - 마지막으로 스스로 판단하라: 이 절이 지시에 답하기에 충분한가? 부족하면 무엇이 비었는지(어떤 자료·구간·조항을 더 봐야 하는지) 한 문장으로.
 
 인용할 수 있는 자료:

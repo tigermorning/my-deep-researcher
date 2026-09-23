@@ -139,6 +139,12 @@ PYTHONIOENCODING=utf-8 python ablation.py
 PYTHONIOENCODING=utf-8 python ablation.py --qs q02 q04 q05 q06 q08 q09 q12 --configs 기본 --reps 2 --replace
 ```
 
+- 대조군만 다시 돌리기(팀 실행은 그대로, 예산·횟수는 기존 기본 실행에서) — 대조군 쪽 코드만 고쳤을 때
+
+```bash
+PYTHONIOENCODING=utf-8 python ablation.py --baseline-only --qs q01 q02 q03 q04 q05 q06 q07 q08 q09 q10 q11 q12
+```
+
 - 지표만 다시 계산(API 호출 없음, `runs.jsonl`도 다시 씀)
 
 ```bash

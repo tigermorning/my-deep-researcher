@@ -5,6 +5,7 @@
     PYTHONIOENCODING=utf-8 python ablation.py --qs q03 q11 --reps 2
     PYTHONIOENCODING=utf-8 python ablation.py --qs q02 q04 --configs 기본 --reps 2   # 기본 + 대조군만
     PYTHONIOENCODING=utf-8 python ablation.py --collect             # 다시 돌리지 않고 output/ablation.json의 실행만 다시 집계
+    PYTHONIOENCODING=utf-8 python ablation.py --baseline-only --qs q01 q02 …   # 팀은 그대로, 대조군만 다시(예산·횟수는 기존 실행에서)
 
 - 실행 하나 = 프로세스 하나(`graph.py --off …` / `baseline.py --budget …`). 비용 카운터가 전역이라 한 프로세스에서 섞지 않는다
 - 스위치를 '껐다'는 것은 graph.py가 시작할 때 찍는 스위치 줄과, 실행 결과의 config에 남은 값으로 확인한다(로그만 바뀌는 사고 방지)
@@ -150,12 +151,31 @@ def main():
     ap.add_argument("--collect", action="store_true")
     ap.add_argument("--recompute", action="store_true", help="--collect와 함께: 저장된 실행의 지표를 다시 계산")
     ap.add_argument("--replace", action="store_true", help="기존 ablation.json에서 --qs 문항의 실행만 새로 돌린 것으로 바꾼다")
+    ap.add_argument("--baseline-only", action="store_true",
+                    help="팀 실행은 그대로 두고 --qs 문항의 대조군만 다시 돌려 바꾼다(예산·횟수는 기존 기본·대조군 실행에서)")
     a = ap.parse_args()
     if not a.collect and "기본" not in a.configs:
         raise SystemExit("--configs에 기본이 있어야 대조군 예산을 정한다")
     out_json = ROOT / "output" / "ablation.json"
 
-    if a.collect:
+    if a.baseline_only:
+        # 대조군 쪽 코드만 바뀌었을 때(집필 인용 규칙을 팀과 같은 문자열로) — 팀 실행을 다시 돌리면 비교가 흔들린다
+        old = json.loads(out_json.read_text(encoding="utf-8"))["runs"]
+        rows = {n: load(n) for n in old}
+        jobs = []
+        for q in a.qs:
+            team = [len(r["visited"]) for r in rows.values() if r["qid"] == q and r["tag"] == "기본" and r["metrics"]["절수"] > 0]
+            reps = sum(1 for r in rows.values() if r["qid"] == q and r["tag"] == "대조군")
+            if not team or not reps:
+                raise SystemExit(f"{q}: 기존 기본({len(team)})·대조군({reps}) 실행이 없다")
+            jobs += [(q, round(sum(team) / len(team)))] * reps
+        print(f"대조군 {len(jobs)}개 — 예산 {dict(jobs)}")
+        with ThreadPoolExecutor(a.workers) as ex:
+            new = list(ex.map(lambda j: launch(["baseline.py", j[0], "--budget", str(j[1])]), jobs))
+        if not all(new):
+            raise SystemExit(f"실패한 대조군 {sum(1 for n in new if not n)}개 — ablation.json을 바꾸지 않는다")
+        names = [n for n in old if not (rows[n]["tag"] == "대조군" and rows[n]["qid"] in a.qs)] + new
+    elif a.collect:
         names = json.loads(out_json.read_text(encoding="utf-8"))["runs"]
         if a.recompute:
             recompute(names)

@@ -4,6 +4,7 @@ data/raw/
 output/runs/
 output/dev/runs/
 output/v1/runs/
+output/v2-baseline-old/runs/
 *.lock
 
 # 비밀
