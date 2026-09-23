@@ -3,6 +3,7 @@
 
     PYTHONIOENCODING=utf-8 python ablation.py                       # 기본: 5문항 × 5설정 × 3회
     PYTHONIOENCODING=utf-8 python ablation.py --qs q03 q11 --reps 2
+    PYTHONIOENCODING=utf-8 python ablation.py --qs q02 q04 --configs 기본 --reps 2   # 기본 + 대조군만
     PYTHONIOENCODING=utf-8 python ablation.py --collect             # 다시 돌리지 않고 output/ablation.json의 실행만 다시 집계
 
 - 실행 하나 = 프로세스 하나(`graph.py --off …` / `baseline.py --budget …`). 비용 카운터가 전역이라 한 프로세스에서 섞지 않는다
@@ -57,6 +58,23 @@ def recompute(names):
              "plan": {**r["plan"], "채택": {str(x["번호"]): x for x in r["sections"]}}}
         r["metrics"] = metrics.compute(s, cost, g)
         (ROOT / "output" / "runs" / f"{n}.json").write_text(json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
+    rewrite_jsonl(g)
+
+
+def rewrite_jsonl(g):
+    """output/runs.jsonl(저장소에 올리는 쪽)을 output/runs/*.json에서 다시 만든다 — 지표를 다시 계산한 뒤 두 벌이 어긋나지 않게.
+    줄 순서는 그대로 두고, runs/*.json이 있는 실행만 바꾼다(로컬에 원본이 없는 줄은 손대지 않는다)."""
+    path = ROOT / "output" / "runs.jsonl"
+    lines, changed = [], 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        name = json.loads(line)["run"]
+        f = ROOT / "output" / "runs" / f"{name}.json"
+        if f.exists():
+            line = json.dumps(g.slim(json.loads(f.read_text(encoding="utf-8"))), ensure_ascii=False)
+            changed += 1
+        lines.append(line)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print(f"runs.jsonl 다시 씀: {changed}/{len(lines)}줄")
 
 
 def aggregate(names):
@@ -65,8 +83,8 @@ def aggregate(names):
         if not n:
             continue
         r = load(n)
-        # 빈 결과를 정상 실행처럼 평균 내지 않는다: JSON이 끝내 깨진 실행·절이 0개인 실행은 뺀다(따로 센다)
-        if r["metrics"].get("JSON실패") or r["metrics"]["절수"] == 0:
+        # 빈 결과를 정상 실행처럼 평균 내지 않는다: JSON이 끝내 깨진 실행·절이 0개인 실행·한 청크도 못 읽은 실행은 뺀다(따로 센다)
+        if r["metrics"].get("JSON실패") or r["metrics"]["절수"] == 0 or r["metrics"]["읽은청크"] == 0:
             dropped.append(n)
             continue
         rows.append(r)
@@ -120,11 +138,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--qs", nargs="+", default=["q01", "q03", "q07", "q10", "q11"])
     ap.add_argument("--reps", type=int, default=3)
+    ap.add_argument("--configs", nargs="+", default=list(CONFIGS), choices=list(CONFIGS),
+                    help="돌릴 팀 설정(대조군 예산을 정하려면 기본이 있어야 한다)")
     ap.add_argument("--workers", type=int, default=6)
     ap.add_argument("--collect", action="store_true")
     ap.add_argument("--recompute", action="store_true", help="--collect와 함께: 저장된 실행의 지표를 다시 계산")
     ap.add_argument("--replace", action="store_true", help="기존 ablation.json에서 --qs 문항의 실행만 새로 돌린 것으로 바꾼다")
     a = ap.parse_args()
+    if not a.collect and "기본" not in a.configs:
+        raise SystemExit("--configs에 기본이 있어야 대조군 예산을 정한다")
     out_json = ROOT / "output" / "ablation.json"
 
     if a.collect:
@@ -132,7 +154,7 @@ def main():
         if a.recompute:
             recompute(names)
     else:
-        jobs = [(q, tag, offs) for q in a.qs for tag, offs in CONFIGS.items() for _ in range(a.reps)]
+        jobs = [(q, tag, offs) for q in a.qs for tag, offs in CONFIGS.items() if tag in a.configs for _ in range(a.reps)]
         print(f"1단계: 팀 실행 {len(jobs)}개 (동시 {a.workers})")
         with ThreadPoolExecutor(a.workers) as ex:
             names = list(ex.map(lambda j: launch(["graph.py", j[0], "--tag", j[1]]

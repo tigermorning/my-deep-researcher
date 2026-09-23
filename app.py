@@ -10,6 +10,7 @@
 import json
 import os
 import re
+import threading
 from pathlib import Path
 
 import streamlit as st
@@ -32,6 +33,23 @@ def list_runs():
         r = json.loads(f.read_text(encoding="utf-8"))
         rows[r["run"]] = r                  # 메모까지 있는 쪽이 이긴다
     return dict(sorted(rows.items(), reverse=True))
+
+
+@st.cache_resource
+def run_lock():
+    """graph.py의 설정(스위치)·COST는 모듈 전역이다 — 세션 둘이 동시에 돌면 서로의 스위치·비용을 덮는다.
+    streamlit 프로세스 하나에 잠금 하나를 두고 실행을 한 번에 하나만 받는다."""
+    return threading.Lock()
+
+
+def baseline_budget(qid):
+    """대조군 예산 = 같은 문항 '기본' 실행들이 실제로 읽은 청크 수의 평균(ablation.py와 같은 규칙). 기록이 없으면 None(기본 24)."""
+    if qid == "custom":                 # 직접 입력한 질문끼리는 같은 문항이 아니다
+        return None
+    got = [len(r["visited"]) for r in list_runs().values()
+           if r["qid"] == qid and r["tag"] == "기본" and r["metrics"].get("절수")
+           and r["metrics"].get("읽은청크") and not r["metrics"].get("JSON실패")]   # 집계에서 빼는 빈 실행은 평균에도 안 넣는다
+    return round(sum(got) / len(got)) if got else None
 
 
 def questions():
@@ -64,18 +82,28 @@ if go:
     else:
         q = qs[[f"{q['id']} [{q['type']}] {q['question'][:40]}…" for q in qs].index(pick)]
         qid, question = q["id"], q["question"]
-    with st.spinner("조사 중 — 팀은 보통 1~3분"):
+    lock = run_lock()
+    if not lock.acquire(blocking=False):
+        st.sidebar.warning("다른 세션이 실행 중이다 — 끝난 뒤 다시 누른다(스위치·비용 카운터가 전역이라 한 번에 하나만 돌린다)")
+        st.stop()
+    try:
         if mode.startswith("팀"):
-            saved = dict(g.설정["스위치"])
-            g.설정["스위치"].update(sw)
-            try:
-                offs = [k for k, v in sw.items() if not v]
-                out = g.run(question, qid, "기본" if not offs else "off-" + "-".join(offs), quiet=True)
-            finally:
-                g.설정["스위치"].update(saved)
+            with st.spinner("조사 중 — 팀은 보통 1~3분"):
+                saved = dict(g.설정["스위치"])
+                g.설정["스위치"].update(sw)
+                try:
+                    offs = [k for k, v in sw.items() if not v]
+                    out = g.run(question, qid, "기본" if not offs else "off-" + "-".join(offs), quiet=True)
+                finally:
+                    g.설정["스위치"].update(saved)
         else:
             import baseline
-            out = baseline.run(question, qid, quiet=True)
+            budget = baseline_budget(qid)
+            note = f"같은 문항 팀 실행의 평균 읽기량 {budget}청크" if budget else "팀 기록이 없어 기본 예산"
+            with st.spinner(f"대조군 조사 중 — {note}"):
+                out = baseline.run(question, qid, budget, quiet=True)
+    finally:
+        lock.release()
     list_runs.clear()
     st.session_state["run"] = out["run"]
 

@@ -30,10 +30,16 @@ def pick_start(question):
 {cards}
 
 JSON으로만 답하라: {{"시작문서": ["..."], "기준자료": ["..."]}}"""
-    out = g.ask(prompt, "coord", as_json=True)
-    seeds = [d for d in map(g._clean, out.get("시작문서", []) or []) if d in g.DOCS or d in g.CHUNKS]
-    refs = [d for d in map(g._clean, out.get("기준자료", []) or []) if d in g.DOCS and d not in seeds]
-    return seeds[:6], refs[:4]
+    for attempt in range(2):
+        out = g.ask(prompt, "coord", as_json=True)
+        raw = list(map(g._clean, out.get("시작문서", []) or []))
+        seeds = [d for d in raw if d in g.DOCS or d in g.CHUNKS]
+        refs = [d for d in map(g._clean, out.get("기준자료", []) or []) if d in g.DOCS and d not in seeds]
+        if seeds:
+            return seeds[:6], refs[:4]
+        # 맞는 제목이 하나도 없으면 읽을 것 없이 빈 보고서로 끝난다(q05에서 1호출·0청크 실행이 나옴) — 한 번 되묻는다
+        prompt += f"\n\n방금 고른 시작문서 {raw}는 목록에 없는 제목이다. 목록의 «» 안 글자를 그대로 옮겨 다시 골라라."
+    raise SystemExit(f"대조군 시작 자료를 고르지 못함: {raw}")   # 빈 실행을 저장하지 않는다 — ablation이 실패로 센다
 
 
 def write_report(question, notes):

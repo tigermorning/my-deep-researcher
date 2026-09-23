@@ -929,6 +929,12 @@ def _append_locked(path, line):
         os.remove(lock)
 
 
+def slim(row):
+    """runs.jsonl에 올리는 한 줄 — 메모(자막 원문 발췌)는 빼고 길이만 남긴다."""
+    return {**row, "sections": [{**x, "메모": [{"청크": n["청크"], "메모글자": len(n["메모"]), "관련없음": irrelevant(n["메모"])}
+                                             for n in x["메모"]]} for x in row["sections"]]}
+
+
 def save(out, qid, tag):
     """저장 두 벌.
     - output/runs.jsonl 한 줄 + output/reports/*.md: 저장소에 올리는 것. 메모(자막 원문 발췌가 많음)는 빼고 길이만 남긴다
@@ -946,10 +952,8 @@ def save(out, qid, tag):
            "sections": secs, "visited": out.get("visited", []), "metrics": out["metrics"], "log": out.get("log", []),
            "report_file": f"reports/{name}.md"}
     (od / "runs" / f"{name}.json").write_text(json.dumps(row, ensure_ascii=False, indent=1), encoding="utf-8")
-    slim = {**row, "sections": [{**x, "메모": [{"청크": n["청크"], "메모글자": len(n["메모"]), "관련없음": irrelevant(n["메모"])}
-                                               for n in x["메모"]]} for x in secs]}
     try:
-        _append_locked(od / "runs.jsonl", json.dumps(slim, ensure_ascii=False))
+        _append_locked(od / "runs.jsonl", json.dumps(slim(row), ensure_ascii=False))
     except RuntimeError as e:      # 잠금이 안 풀려도 실행 결과(runs/*.json)는 이미 저장됨 — 실행을 잃지 않는다
         print(f"경고: runs.jsonl 덧붙이기 실패({e}). output/runs/{name}.json은 저장됨")
     return name
