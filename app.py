@@ -61,6 +61,38 @@ def baseline_budget(qid):
     return round(sum(got) / len(got)) if got else None
 
 
+STAGE = {"plan": "① 기획", "dispatch": "② 배치", "researcher": "③ 조사관", "review": "④ 점검",
+         "synthesize": "⑤ 종합", "evaluate": "⑥ 평가"}
+
+
+def live_progress(box):
+    """graph.run / baseline.run의 on_step — LangGraph 스트리밍으로 받은 진행을 화면에 바로 그린다.
+    - 노드가 끝나면 그 노드의 로그 줄(무엇을 배정했고 몇 청크 읽고 몇 자 썼나)
+    - 조사관이 청크를 하나 읽을 때마다 절별 진행표(읽은 수/예산 · 방금 읽은 청크 · 관련 없음·되물음 표시)
+    원문은 오지 않는다(청크 id와 개수만)."""
+    box.caption("조사관 진행(청크 하나 읽을 때마다 갱신) · 아래는 노드가 끝날 때마다의 로그")
+    table = box.empty()
+    rows = {}
+
+    def on_step(node, lines):
+        if node == "읽기":
+            e = lines[0]
+            rows[(e["절"], e["바퀴"])] = e
+            md = ["| 절 | 바퀴 | 읽음 | 방금 읽은 청크 |", "|---|---|---|---|"]
+            for (sec, rnd), x in rows.items():
+                flag = (" · 관련 없음" if x["관련없음"] else "") + (" · 메모 되물음" if x["되물음"] else "")
+                md.append(f"| {sec} | {rnd} | {x['읽음']}/{x['예산']} | `{x['청크']}`{flag} |")
+            table.markdown("\n".join(md))
+            # expanded를 매번 넘긴다 — 라벨만 바꾸면 streamlit이 상태 창을 접었다
+            box.update(label=f"③ 조사관 읽는 중 — {sum(x['읽음'] for x in rows.values())}청크", expanded=True)
+            return
+        for ln in lines:
+            box.code(ln, language=None)
+        box.update(label=f"{STAGE.get(node, node)} 끝", expanded=True)
+
+    return on_step
+
+
 def questions():
     return json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))["questions"]
 
@@ -76,7 +108,8 @@ mode = st.sidebar.radio("구성", ["팀(기획→조사관→점검→종합)", 
 sw = {}
 if mode.startswith("팀"):
     st.sidebar.caption("스위치 — 끄면 그 장치의 코드 경로를 실제로 건너뛴다")
-    for k, desc in [("배정검사", "① 목차 배정을 코드로 검사"), ("남의구역", "② 다른 절 구역 피하기"), ("재위임", "④ 부족 신고한 절 다시 보내기")]:
+    for k, desc in [("배정검사", "① 목차 배정을 코드로 검사"), ("남의구역", "② 다른 절 구역 피하기"), ("재위임", "④ 부족 신고한 절 다시 보내기"),
+                    ("인용대조", "③ 메모·원고의 큐 번호와 인용문을 원문과 대조")]:
         sw[k] = st.sidebar.checkbox(f"{k} — {desc}", value=True)
 key = st.sidebar.text_input("OpenAI 키(비우면 환경변수·.env 사용)", type="password")
 go = st.sidebar.button("실행", type="primary")
@@ -101,20 +134,23 @@ if go:
         st.stop()
     try:
         if mode.startswith("팀"):
-            with st.spinner("조사 중 — 팀은 보통 1~3분"):
+            with st.status("조사 시작 — 팀은 보통 1~3분", expanded=True) as box:
                 saved = dict(g.설정["스위치"])
                 g.설정["스위치"].update(sw)
                 try:
                     offs = [k for k, v in sw.items() if not v]
-                    out = g.run(question, qid, "기본" if not offs else "off-" + "-".join(offs), quiet=True)
+                    out = g.run(question, qid, "기본" if not offs else "off-" + "-".join(offs), quiet=True,
+                                on_step=live_progress(box))
                 finally:
                     g.설정["스위치"].update(saved)
+                box.update(label="끝 — 아래에서 보고서를 본다", state="complete", expanded=False)
         else:
             import baseline
             budget = baseline_budget(qid)
             note = f"같은 문항 팀 실행의 평균 읽기량 {budget}청크" if budget else "팀 기록이 없어 기본 예산"
-            with st.spinner(f"대조군 조사 중 — {note}"):
-                out = baseline.run(question, qid, budget, quiet=True)
+            with st.status(f"대조군 조사 시작 — {note}", expanded=True) as box:
+                out = baseline.run(question, qid, budget, quiet=True, on_step=live_progress(box))
+                box.update(label="끝 — 아래에서 보고서를 본다", state="complete", expanded=False)
     finally:
         lock.release()
     list_runs.clear()

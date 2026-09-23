@@ -17,6 +17,24 @@ import sys
 import graph as g
 
 
+def with_asked(question, seeds):
+    """대조군 공정성(F): 질문이 부른 트랙이 시작문서에 하나도 없으면 코드가 맨 앞에 넣는다(최대 셋, 전체 6건 이하).
+    팀은 기획 검사가 질문이 부른 트랙을 빠짐없이 배정하는데, 대조군은 모델이 규정만 골라
+    q06·q08·q09에서 트랙을 0청크 읽었다 — 비교가 '분업'이 아니라 '트랙을 읽었나'를 재게 된다."""
+    named = {m["work"] for m in g.META.values() if m["type"] == "track" and m["work"] in question}
+    pool = g.asked_tracks(question, named)
+    # 질문이 트랙 이름 낱말(예: '일본어')까지 짚은 트랙을 원문 쪽 트랙보다 앞에 — asked_tracks는 원문 쪽을 늘 포함한다
+    # 회차도 본다 — q08(E06)에 같은 작품 E01 SDH가 먼저 들어왔다
+    hit = lambda d: all(tok in question for tok in g.META[d]["track"].split())
+    ep = lambda d: not g.META[d]["ep"] or g.META[d]["ep"] in question
+    asked = sorted((d for d in g.DOCS if d in pool), key=lambda d: (not ep(d), not hit(d)))
+    if not asked or any(g._is_track(s) and g._doc_of(s) in asked for s in seeds):
+        return seeds
+    add = asked[:3]
+    rest = [s for s in seeds if s not in add]
+    return add + rest[: max(6 - len(add), 1)]      # 모델이 고른 것도 최소 하나는 남긴다
+
+
 def pick_start(question):
     cards = "\n".join(g.card(t) for t in g.DOCS)
     prompt = f"""너는 자막 규정 조사관이다. 혼자서 아래 질문에 답할 보고서를 쓴다. 먼저 읽기 시작할 자료를 고른다.
@@ -37,7 +55,7 @@ JSON으로만 답하라: {{"시작문서": ["..."], "기준자료": ["..."]}}"""
         seeds = [d for d in raw if d in g.DOCS or d in g.CHUNKS]
         refs = [d for d in map(g._clean, out.get("기준자료", []) or []) if d in g.DOCS and d not in seeds]
         if seeds:
-            return seeds[:6], refs[:4]
+            return with_asked(question, seeds[:6]), refs[:4]
         # 맞는 제목이 하나도 없으면 읽을 것 없이 빈 보고서로 끝난다(q05에서 1호출·0청크 실행이 나옴) — 한 번 되묻는다
         prompt += f"\n\n방금 고른 시작문서 {raw}는 목록에 없는 제목이다. 목록의 «» 안 글자를 그대로 옮겨 다시 골라라."
     raise SystemExit(f"대조군 시작 자료를 고르지 못함: {raw}")   # 빈 실행을 저장하지 않는다 — ablation이 실패로 센다
@@ -61,7 +79,7 @@ def write_report(question, notes):
 인용할 수 있는 자료:
 {titles or "(없음)"}
 
-메모:
+{g.stats_block(sorted(g.seen_docs(got)))}메모:
 {memo or "(관련 메모 없음)"}
 
 첫 줄은 '# 제목', 그다음 마크다운 본문만 답하라."""
@@ -71,7 +89,8 @@ def write_report(question, notes):
     return (first.lstrip("# ").strip(), rest.strip()) if first.startswith("#") else (question, text)
 
 
-def run(question, qid="custom", budget=None, tag="대조군", quiet=False, keep=True):
+def run(question, qid="custom", budget=None, tag="대조군", quiet=False, keep=True, on_step=None):
+    """on_step: 팀(graph.run)과 같은 모양의 진행 알림 — 청크 하나 읽을 때마다 ("읽기", [사건]), 끝나면 ("evaluate", [요약])."""
     for k in g.COST:
         g.COST[k] = 0
     budget = budget or g.설정["절수"] * (g.설정["절예산"] + g.설정["기준예산"])
@@ -88,14 +107,21 @@ def run(question, qid="custom", budget=None, tag="대조군", quiet=False, keep=
             if not cands:
                 break
             cid = g.pick_next(t, question, notes, cands)
-        notes.append({"청크": cid, "메모": g.read_one(cid, t, question, notes), "짝": g.pair_seen(cid, t)})
+        memo, chk = g._read_one(cid, t, question, notes)      # 메모 검사(M·P)도 팀과 같은 도구
+        notes.append({"청크": cid, "메모": memo, "짝": g.pair_seen(cid, t), **({"대조": chk} if chk else {})})
         read.append(cid)
+        if on_step:
+            on_step("읽기", [{"절": "혼자 조사", "바퀴": 1, "읽음": len(read), "예산": budget, "청크": cid,
+                              "관련없음": g.irrelevant(memo), "되물음": bool(chk)}])
     title, body = write_report(question, notes)
+    qfix = None
+    if g.설정["스위치"]["인용대조"] and body:                # 집필 인용문 대조(B·B+)도 팀과 같은 도구
+        body, qfix = g.check_quotes(t, question, body, notes)
     cites = g.citations(body)
     read_docs = g.seen_docs(notes)
     sec = {"절": "혼자 조사", "번호": 0, "바퀴": 1, "원고": body, "읽은청크": read, "새로읽은": read, "메모": notes,
            "인용": cites, "허위인용": sorted({c for c, _ in cites if c not in read_docs}), "충분": True, "부족": "",
-           "지시": t["지시"]}
+           "지시": t["지시"], **({"인용대조": qfix} if qfix else {})}
     total = g.COST["coord_chars"] + g.COST["sub_chars"]
     g.COST["coord_chars"] = g.COST["sub_chars"] = total          # 위아래가 없다 → 격리율 100%
     report = (f"# {title}\n\n> 질문: {question}\n\n{body}\n\n## 부록: 읽은 자료\n\n"
@@ -105,6 +131,8 @@ def run(question, qid="custom", budget=None, tag="대조군", quiet=False, keep=
                   "되돌림": [], "재위임기록": [], "바퀴": 1, "종료": "대조군"}}
     import metrics
     s["metrics"] = metrics.compute(s, g.COST, g)
+    if on_step:
+        on_step("evaluate", ["⑥ 평가   " + metrics.summary(s["metrics"])])
     if not quiet:
         print(f"대조군   출발 {len(seeds)}건 · 기준 {len(refs)}건 · 예산 {budget}청크 → {len(read)}청크 읽음 · 보고서 {len(report):,}자")
         print("⑥ 평가   " + metrics.summary(s["metrics"]))

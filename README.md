@@ -19,7 +19,7 @@
 | 파일 | 하는 일 |
 |---|---|
 | `graph.py` | LangGraph 파이프라인(① 기획 ~ ⑥ 평가), CLI |
-| `metrics.py` | 지표(경보 4 · 견줌 11). 지표마다 보는 장치를 `SPEC`에 적음 |
+| `metrics.py` | 지표(경보 4 · 견줌 13). 지표마다 보는 장치를 `SPEC`에 적음. 인용 대조 검사(`quote_issues`)도 여기 — 조사관이 도구로 씀 |
 | `baseline.py` | 혼자 하는 대조군(같은 자료·모델·도구·읽기 예산) |
 | `ablation.py` | 스위치 하나씩 끈 설정 + 대조군을 여러 번 돌려 집계 |
 | `app.py` | streamlit 데모 |
@@ -33,7 +33,8 @@
 | `scripts/check_plans.py` | ① 기획만 12문항에 돌려 목차 검사 |
 | `scripts/export_index.py` | `corpus.json` → `corpus_index.json`(본문 제외) |
 | `scripts/capture_demo.py` | README용 데모 화면 캡처 |
-| `output/` | `runs.jsonl` · `ablation.json` · `ablation.md` · `reports/` |
+| `output/` | `runs.jsonl` · `ablation.json` · `ablation.md` · `reports/` (v2, 118실행) |
+| `output/v1/` | 첫 판 104실행 기록(고치기 전 비교용) |
 | `output/sample/` | 예시 코퍼스 실행 결과(본 실험과 분리) |
 
 ## 무엇을 재현할 수 있나
@@ -41,7 +42,7 @@
 - 자막·규정 원문은 저작물이라 **`data/corpus.json`을 저장소에 올리지 않았다** (과제 제출 구조의 `data/corpus.json` 자리)
 - 저장소만 받아도 되는 것
   - 코퍼스 규모·링크 확인: `data/corpus_index.json` (60건 · 1,609,245자 · 836,287토큰 = 창 6.53배 · 링크 134)
-  - 결과 보기: `output/`의 104실행(`runs.jsonl` · `ablation.md` · `reports/`)과 데모 화면(`streamlit run app.py`, 코퍼스 없이 뜬다)
+  - 결과 보기: `output/`의 118실행(v2, `runs.jsonl` · `ablation.md` · `reports/`), `output/v1/`의 104실행(첫 판)과 데모 화면(`streamlit run app.py`, 코퍼스 없이 뜬다)
   - 지표 다시 계산은 코퍼스가 필요하다(청크 정보를 씀)
   - **파이프라인을 끝까지 직접 돌려 보기: 예시 코퍼스**(아래)
 - 원본이 있어야 되는 것: 본 코퍼스 빌드와 본 실험 재실행(`graph.py` · `baseline.py` · `ablation.py`). 코퍼스가 없으면 `graph.py`가 이유를 알려 주고 멈춘다
@@ -71,13 +72,19 @@ DR_SAMPLE=1 streamlit run app.py
 - 질문: `s01` 단일(규정만) · `s02` 흩어진(SDH 트랙 둘 × 언어별 가이드) · `s03` 한 대상(강제 자막 ↔ SDH)
 - 결과는 `output/sample/`에 저장 — 본 실험(`output/runs.jsonl` · `ablation.json`)과 섞이지 않는다. `ablation.py`는 예시 모드를 거부한다
 - 예시 코퍼스 다시 만들기: `python scripts/make_sample_corpus.py`
-- 실행 결과(2026-09-23, `output/sample/`, 각 1회 · 경보 전부 0)
-  - s02 팀: 심어 둔 어긋남(한국어 SDH 화자 소괄호 3 · 효과음 서술형 4 · 가사 `#` 1, 영어 SDH 소괄호 2)을 하나도 못 찾고 '규정에 부합'이라 씀. SDH 규정을 짝 번역 트랙에 들이댐(규정 적용 오류). 재위임 1회
-  - s02 대조군: 영어 SDH `(martha)` 소괄호 1건은 찾음. 대신 화자 `[RADIO VOICE]`를 효과음으로 잘못 봄
-  - s03: 강제 자막 ↔ SDH 짝은 맞게 댔지만 심어 둔 누락 2건(간판이 SDH에 없음 · 문자 메시지가 강제 자막에 없음)은 못 찾음
-  - s01: 답(16자 · 초당 12자 · 두 줄 · 5/6~7초)은 맞지만 같은 조항 번호를 «강제 자막 규정»에도 달아 인용함
-  - 본 실험에서 본 약점(규정 적용 오류 · 번호는 맞고 출처가 틀린 인용 · 안 본 것)이 예시 코퍼스에서도 그대로 나온다 — REPORT 9절
-  - 예시는 작아서(13청크) 대조군도 거의 다 읽는다(12청크, 예산소진율 50%) — 분업의 값(흩어진 자료 도달)이 드러나는 규모는 아니다
+- 실행 결과 — 두 판 모두 경보 0, 각 1회라 흔들림을 감안할 것
+  - v1(첫 판, `output/sample/v1/`)
+    - s02 팀: 심어 둔 어긋남(한국어 SDH 화자 소괄호 3 · 효과음 서술형 4 · 가사 `#` 1, 영어 SDH 소괄호 2)을 하나도 못 찾고 '규정에 부합'이라 씀
+    - s02 대조군: 영어 SDH `(martha)` 소괄호 1건은 찾음. 대신 화자 `[RADIO VOICE]`를 효과음으로 잘못 봄
+    - s03: 심어 둔 누락 2건(간판이 SDH에 없음 · 문자 메시지가 강제 자막에 없음)을 못 찾음
+    - s01: 답은 맞지만 같은 조항 번호를 «강제 자막 규정»에도 달아 인용함
+  - v2(표기 통계·인용 대조를 넣은 판, `output/sample/`) — REPORT 3절 'v2'
+    - s02 팀: 효과음 서술형 어긋남을 짚음(표기 통계의 '서술형 [ ] 4개'를 씀). 다만 예로 든 큐가 틀렸고 화자 소괄호는 놓침
+      - 리뷰 반영 전 같은 판으로 한 번 더 돌렸을 때는 셋(화자 소괄호 · 서술형 · 영어 효과음 소괄호)을 찾고, 영어 대문자 화자(규정대로)를 위반이라 함 → 시행마다 흔들림
+    - s02 대조군: 전부 '규정에 부합'. 표기 통계의 '큐 총 180개'를 '큐 180'으로 옮겨 씀
+    - s03: 문자 메시지 누락(SDH 큐 35 `[문자]`)을 이번에도 놓침
+  - 읽는 법: 개수를 코드가 세어 주면 '있다·없다'는 맞아지지만, 어느 큐가 어긋났는지 짚는 것과 규정 해석은 그대로 약하다 — REPORT 9절
+  - 예시는 작아서(13청크) 대조군도 거의 다 읽는다(예산소진율 50%) — 분업의 값(흩어진 자료 도달)이 드러나는 규모는 아니다
 
 ## 준비
 
@@ -107,7 +114,7 @@ python scripts/build_corpus.py
 PYTHONIOENCODING=utf-8 python graph.py q03
 ```
 
-- 스위치 끄기 (`배정검사` · `남의구역` · `재위임`)
+- 스위치 끄기 (`배정검사` · `남의구역` · `재위임` · `인용대조`)
 
 ```bash
 PYTHONIOENCODING=utf-8 python graph.py q03 --off 남의구역
@@ -119,7 +126,7 @@ PYTHONIOENCODING=utf-8 python graph.py q03 --off 남의구역
 PYTHONIOENCODING=utf-8 python baseline.py q03 --budget 18
 ```
 
-- 절제 실험 (기본 5문항 × 5설정 × 3회)
+- 절제 실험 (기본 5문항 × 6설정 × 3회 = 기본 · 스위치 넷 하나씩 끔 · 대조군)
 
 ```bash
 PYTHONIOENCODING=utf-8 python ablation.py
@@ -146,6 +153,7 @@ streamlit run app.py
 ## 데모 화면
 
 - 지난 실행을 고르거나 새로 실행(질문 · 팀/대조군 · 스위치)
+- 실행 중에는 LangGraph 스트리밍으로 진행을 바로 보여 줌: 노드가 끝날 때마다 로그, 조사관이 청크를 하나 읽을 때마다 절별 진행표(읽음/예산 · 방금 읽은 청크)
 - 탭: 보고서 · 절마다 누가 무엇을(배정 → 읽은 순서 → 원고 → 부족 신고) · 기획(코드가 고친 것) · 지표 · 로그
 - 캡처: `python scripts/capture_demo.py <실행 이름>` (streamlit을 띄운 상태에서, Playwright 필요)
 - `?run=<실행 이름>`으로 특정 실행을 바로 연다
@@ -156,6 +164,6 @@ streamlit run app.py
 
 ## 저작권·비밀
 
-- 저장소에 올리지 않는 것: `data/corpus.json` · `data/raw/` · `output/runs/`(조사관 메모 = 자막 발췌) · `.env`
+- 저장소에 올리지 않는 것: `data/corpus.json` · `data/raw/` · `output/runs/` · `output/v1/runs/`(조사관 메모 = 자막 발췌) · `.env`
 - 예시 코퍼스와 그 실행 기록(`output/sample/runs/` 메모 포함)은 지어낸 자료라 올린다
 - 보고서 속 자막 인용은 짧은 대사 단위

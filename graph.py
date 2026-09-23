@@ -130,7 +130,7 @@ def render(cid):
 QUESTIONS = {q["id"]: q for q in json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))["questions"]}
 
 # ---------------------------------------------------------------- 비용 카운터
-COST = {"calls": 0, "coord_chars": 0, "sub_chars": 0, "retry": 0, "json_fail": 0}
+COST = {"calls": 0, "coord_chars": 0, "sub_chars": 0, "retry": 0, "json_fail": 0, "check_ask": 0}
 _cost_lock = threading.Lock()
 
 
@@ -599,22 +599,28 @@ def read_one(cid, t, question, notes=()):
     """청크 하나를 읽고 메모만 돌려준다 — 원문은 이 함수 밖으로 안 나간다(격리 경계).
     지시는 원문 **뒤에** 둔다. '관련 없으면 관련 없음'이 원문 앞에 있으면 gpt-4o-mini가 원문을 읽기도 전에
     '관련 없음'으로 답했다(«넷플릭스 강제 자막 이해하기»를 q11에 3회 연속 '관련 없음'. 같은 지시를 뒤로 옮기자 조항을 뽑음).
-    지금까지의 메모를 맥락으로 함께 준다: 트랙 둘을 맞대려면 앞 트랙에서 본 큐의 시각을 알아야 한다."""
+    지금까지의 메모를 맥락으로 함께 준다: 트랙 둘을 맞대려면 앞 트랙에서 본 큐의 시각을 알아야 한다.
+    단 규정 청크에는 맥락을 주지 않는다(R) — q01 FAQ 메모가 앞 청크의 I.2·I.15를 되풀이해 원고가 '12·9자'를 FAQ 출처로 적었다.
+    인용대조가 켜져 있으면 받은 메모를 코드가 원문과 맞춰 보고 한 번씩 되묻는다(check_memo)."""
+    memo, _ = _read_one(cid, t, question, notes)
+    return memo
+
+
+def _read_one(cid, t, question, notes=()):
+    """read_one의 본체. (메모, 대조 기록 또는 None)"""
     is_track = cid in CHUNK_TIME
     how = ("근거마다 큐 번호와 시작 시각을 반드시 적어라(예: 큐 123 00:12:03 [효과음] 표기)." if is_track
            else "이 자료는 규정이다(영어 원문일 수 있다 — 조항 제목을 질문의 쟁점과 맞춰 보라). 해당 조항의 번호(예: II.8, I.17)와 요구 내용을 적어라.")
-    got = [n for n in notes if not irrelevant(n["메모"])]
+    got = [n for n in notes if not irrelevant(n["메모"])] if is_track else []
     ctx = "\n".join(f"- {n['청크']}: {n['메모']}" for n in got)[-2500:]
     view = render_aligned(cid, t)
     # 맞대기 보기가 붙은 청크는 그 자체가 비교 재료다. 이 말이 없으면 모델이 '관련 없음'으로 빠졌다(q10 영어 번역 6청크 전부)
     pair_hint = ("\n- ↔ 줄은 같은 시간의 짝 트랙 큐다. 같은 시각의 원문·번역(또는 강제 자막·SDH) 쌍이 어떻게 다른지, "
                  "짝이 없는 큐(빠지거나 더해진 것)가 이 질문의 재료다." if "↔ «" in view else "")
+    ctx_block = f"지금까지 이 절에서 읽은 메모(맞대 볼 때 참고):\n{ctx or '(아직 없음)'}\n\n" if is_track else ""
     prompt = f"""{_brief(t, question)}
 
-지금까지 이 절에서 읽은 메모(맞대 볼 때 참고):
-{ctx or "(아직 없음)"}
-
-아래는 자료 «{cid}»의 원문이다.
+{ctx_block}아래는 자료 «{cid}»의 원문이다.
 
 --- 원문 시작 ---
 {view}
@@ -632,7 +638,96 @@ def read_one(cid, t, question, notes=()):
         with _cost_lock:
             COST["retry"] += 1
         memo = ask(prompt + f"\n\n(이 원문에는 ↔ 짝 줄이 {pairs}개 있다. 그중 질문에 해당하는 쌍을 골라 메모하라.)", "sub").strip()
-    return memo
+    if not 설정["스위치"]["인용대조"] or not is_track or irrelevant(memo):
+        return memo, None
+    return check_memo(memo, cid, t, prompt, notes)
+
+
+MEMO_REF = re.compile(r"«([^»]+)»\s*큐\s*(\d+)")
+MEMO_OWN = re.compile(r"^[\s\-*•\d.)]*큐\s*(\d+)", re.M)
+
+
+def memo_issues(memo, cid, t, notes=()):
+    """메모 검사(M): 메모에 적힌 큐 번호가 이 조사관이 실제로 본 것인가.
+    - '«트랙» 큐 N' → 이 청크나 이 절이 앞서 읽은 청크의 큐 범위, 또는 코드가 ↔ 짝으로 보여 준 큐(이번·앞 청크)
+    - 줄 머리의 '큐 N'(«»·↔ 없는 줄) → 이 트랙의 읽은 범위이거나 이 청크의 짝 큐 번호
+    앞 메모를 맥락으로 주므로 앞 청크의 큐를 다시 적는 것은 정상이다(틀렸다고 지우면 맥락을 준 뜻이 없다).
+    q11 아파트 SDH #6/9: 강제 자막 짝은 큐 2 하나뿐인데 메모가 '↔ 강제 자막 큐 3~9'를 지어냈다(강제 자막은 3큐뿐)."""
+    doc = CHUNK_DOC[cid]
+    a, b = CHUNK_CUES[cid]
+    here = pair_hosts(cid, t)
+    pairs = {(d, n) for d, n, _ in here} | {(d, n) for x in notes for d, n in x.get("짝", [])}
+    spans = {}
+    for c in [cid] + [x["청크"] for x in notes]:
+        if c in CHUNK_CUES:
+            spans.setdefault(CHUNK_DOC[c], []).append(CHUNK_CUES[c])
+    seen = lambda d, n: any(lo <= n <= hi for lo, hi in spans.get(d, [])) or (d, n) in pairs
+    out = []
+    for d, n in MEMO_REF.findall(memo):
+        d, n = re.sub(r"\s*#\d+/\d+$", "", d.strip()), int(n)
+        if d in CUES and not seen(d, n):
+            out.append(f"«{d}» 큐 {n}은 이 원문(큐 {a}~{b})에도 ↔ 짝 줄에도 없다" if d == doc
+                       else f"«{d}» 큐 {n}은 이 원문에 ↔ 짝 줄로 나오지 않았다")
+    mates = {n for _, n, _ in here}
+    for ln in memo.split("\n"):
+        if "«" in ln or "↔" in ln:
+            continue
+        for n in map(int, MEMO_OWN.findall(ln)):
+            if not seen(doc, n) and n not in mates:
+                out.append(f"큐 {n}은 이 원문(큐 {a}~{b})에 없다")
+    return list(dict.fromkeys(out))
+
+
+def missed_pairs(memo, cid, t):
+    """짝 줄 기록 확인(P): 큐가 적은 짝 트랙(강제 자막 등, SMALL_CUES 이하)의 ↔ 줄은 하나하나가 질문의 재료다.
+    메모에 붙은 큐 번호도 짝 큐 번호도 없으면 빠뜨린 것 — q11 SDH 큐 113 '태산'에 강제 자막 큐 1이 붙어 있었는데
+    메모가 안 적고 원고는 'SDH에 없다'고 썼다. 번역 트랙 짝은 줄마다 붙으니 검사하지 않는다."""
+    miss = []
+    for d, n, host in pair_hosts(cid, t):
+        if len(CUES[d]) > SMALL_CUES:
+            continue
+        own = host is not None and re.search(rf"큐\s*{host}(?!\d)", memo)
+        theirs = re.search(rf"«{re.escape(d)}»\s*큐\s*{n}(?!\d)", memo)
+        if not own and not theirs:
+            miss.append((d, n, host))
+    return miss
+
+
+def _drop_bad_lines(memo, cid, t, notes):
+    return "\n".join(ln for ln in memo.split("\n") if not memo_issues(ln, cid, t, notes)).strip()
+
+
+def check_memo(memo, cid, t, prompt, notes=()):
+    """M → P 순서로 한 번씩 되묻는다. 되물어도 틀린 줄은 지운다(틀린 번호가 원고로 올라가지 않게).
+    줄을 지우고 남은 게 없으면 '관련 없음'으로 둔다(빈 메모가 관련 있는 메모로 세어지지 않게).
+    돌려주는 기록: {'틀림': [...], '짝누락': [...], '지운줄': n} 또는 None(문제 없음)"""
+    rec = {}
+    bad = memo_issues(memo, cid, t, notes)
+    if bad:
+        with _cost_lock:
+            COST["check_ask"] += 1
+        fixed = ask(prompt + f"\n\n네가 쓴 메모:\n{memo}\n\n코드가 원문과 대조하니 틀린 번호가 있다:\n"
+                    + "\n".join(f"- {x}" for x in bad)
+                    + "\n메모 전체를 다시 써라. 큐 번호는 원문의 [큐 N | 시각] 줄과 ↔ 줄에 실제로 있는 것만 써라. 메모만 답하라.", "sub").strip()
+        if not irrelevant(fixed):
+            memo = fixed
+        left = memo.count("\n") + 1
+        memo = _drop_bad_lines(memo, cid, t, notes)
+        rec.update({"틀림": bad, "지운줄": left - (memo.count("\n") + 1 if memo else 0)})
+        if not memo:
+            return "관련 없음", rec
+    miss = missed_pairs(memo, cid, t)
+    if miss:
+        with _cost_lock:
+            COST["check_ask"] += 1
+        spots = "\n".join(f"- [큐 {h}] 줄의 ↔ «{d}» 큐 {n}" if h else f"- 짝 트랙에만 있는 «{d}» 큐 {n}" for d, n, h in miss)
+        more = ask(prompt + f"\n\n네가 쓴 메모:\n{memo}\n\n원문의 아래 짝이 메모에 빠졌다. 짝마다 두 큐의 본문이 어떻게 같고 다른지"
+                   f"(빠지거나 더해진 것) 한 줄씩 적어라. 원문에 있는 그대로, 큐 번호를 붙여서. 더할 줄만 답하라.\n{spots}", "sub").strip()
+        more = _drop_bad_lines(more, cid, t, notes)
+        if more and not irrelevant(more):
+            memo = memo + "\n" + more
+        rec["짝누락"] = [[d, n] for d, n, _ in miss]
+    return memo, (rec or None)
 
 
 PAIR_LIMIT = 12000
@@ -644,20 +739,14 @@ def _mates(cid, t):
     return [d for d in dict.fromkeys(ds) if d in CUES and d != doc and _same_scene(doc, d)][:2]
 
 
-def render_aligned(cid, t):
-    """맞대기 보기: 트랙 청크를 읽을 때, 이 절이 맡거나 기준으로 받은 같은 회차 다른 트랙(최대 둘)의 큐를
-    **시간이 겹치는 줄 바로 아래** 코드가 붙인다. 짝 큐는 가장 많이 겹치는 줄 하나에만 붙인다.
-    - 두 트랙을 따로 읽고 모델이 시각을 기억해 맞추게 했더니 틀렸다(q11: SDH 큐 113에 '태산'이 있는데 '빠졌다')
-    - 짝 목록을 청크 끝에 통째로 붙여도 틀렸다(긴 목록에서 같은 시각 줄을 못 찾음)
-    붙는 분량이 PAIR_LIMIT를 넘는 짝(회차 전체에 걸친 강제 자막 청크의 짝 = SDH 전체 등)은 붙이지 않는다."""
-    base = render(cid)
-    if cid not in CHUNK_TIME:
-        return base
+def _align(cid, t):
+    """맞대기 계산: (이 청크 큐들, {이 트랙 큐 번호: [↔ 줄]}, 짝 없는 ↔ 줄, 붙인 짝 문서).
+    ↔ 줄마다 (문서, 짝 큐 번호, 붙은 큐 번호)도 PAIR_HOSTS에 남긴다 — 짝 줄 기록 확인(P)이 쓴다."""
     doc = CHUNK_DOC[cid]
     a, b = CHUNK_CUES[cid]
     rows = [c for c in CUES[doc] if a <= c[0] <= b]
     t0, t1 = CHUNK_TIME[cid]
-    attach, orphans, used = {}, [], []
+    attach, orphans, used, hosts = {}, [], [], []
     for d in _mates(cid, t):
         mine = [m for m in CUES[d] if m[1] < t1 and m[4] > t0]
         if sum(len(m[3]) + 30 for m in mine) > PAIR_LIMIT:
@@ -671,6 +760,25 @@ def render_aligned(cid, t):
                     best, ov = r[0], o
             line = f"    ↔ «{d}» 큐 {m[0]} | {m[2]}: {m[3]}"
             (attach.setdefault(best, []).append(line) if best else orphans.append(line))
+            hosts.append((d, m[0], best))
+    return rows, attach, orphans, used, hosts
+
+
+def pair_hosts(cid, t):
+    """[(짝 문서, 짝 큐 번호, 붙은 이 트랙 큐 번호 또는 None)]"""
+    return _align(cid, t)[4] if cid in CHUNK_TIME else []
+
+
+def render_aligned(cid, t):
+    """맞대기 보기: 트랙 청크를 읽을 때, 이 절이 맡거나 기준으로 받은 같은 회차 다른 트랙(최대 둘)의 큐를
+    **시간이 겹치는 줄 바로 아래** 코드가 붙인다. 짝 큐는 가장 많이 겹치는 줄 하나에만 붙인다.
+    - 두 트랙을 따로 읽고 모델이 시각을 기억해 맞추게 했더니 틀렸다(q11: SDH 큐 113에 '태산'이 있는데 '빠졌다')
+    - 짝 목록을 청크 끝에 통째로 붙여도 틀렸다(긴 목록에서 같은 시각 줄을 못 찾음)
+    붙는 분량이 PAIR_LIMIT를 넘는 짝(회차 전체에 걸친 강제 자막 청크의 짝 = SDH 전체 등)은 붙이지 않는다."""
+    base = render(cid)
+    if cid not in CHUNK_TIME:
+        return base
+    rows, attach, orphans, used, _ = _align(cid, t)
     if not used:
         return base
     head = CHUNKS[cid].split("\n", 1)[0]
@@ -728,6 +836,120 @@ def citations(text):
     return out
 
 
+AN8 = "{\\an8}"
+
+
+def track_stats(doc):
+    """표기 통계(C): 트랙 **전체**의 표기 수를 코드가 센 사실 요약(원문 발췌 아님).
+    조사관은 몇 청크만 읽으므로 '효과음 표기가 없다/있다'를 트랙 전체로 말할 수 없었다 —
+    q03 등산 SDH는 효과음·음악 [ ]가 0건인데 팀·대조군 모두 놓쳤고, {\\an8}(위치 명령)을 내용으로 읽었다."""
+    k = dict.fromkeys(["lead", "only", "mid", "music", "verb", "paren0", "paren", "note", "hash", "caps", "hyphen",
+                       "an8", "l16", "l20", "l42"], 0)
+    longest = 0
+    for c in CUES[doc]:
+        k["note"] += "♪" in c[3]
+        k["an8"] += AN8 in c[3]
+        for ln in c[3].split(" / "):
+            s = ln.replace(AN8, "").replace("‪", "").replace("‬", "").strip()
+            n = len(s)
+            longest = max(longest, n)
+            k["l16"] += n > 16
+            k["l20"] += n > 20
+            k["l42"] += n > 42
+            k["hyphen"] += s.startswith("-")
+            s = s.lstrip("-– ").strip()
+            k["paren0"] += s.startswith("(")
+            k["paren"] += "(" in s
+            k["hash"] += "#" in s
+            k["caps"] += bool(re.match(r"[A-Z][A-Z .'\-]{1,20}:", s))
+            tags = re.findall(r"\[([^\]]+)\]", s)
+            if not tags:
+                continue
+            k["music"] += sum("음악" in x or "music" in x.lower() for x in tags)
+            k["verb"] += sum(x.strip().endswith("다") for x in tags)
+            if re.fullmatch(r"(\[[^\]]+\]\s*)+", s):
+                k["only"] += 1
+            elif s.startswith("["):
+                k["lead"] += 1
+            else:
+                k["mid"] += 1
+    # 'N큐'처럼 숫자와 '큐'를 붙여 쓰면 모델이 '큐 N'(큐 번호)으로 옮겨 적었다(예시 코퍼스 대조군) — 개수는 'N개'로
+    return "\n".join([
+        f"«{doc}»: 큐 총 {len(CUES[doc])}개",
+        f"  - [ ]: 줄 머리 [ ] 뒤에 같은 줄 대사가 이어짐 {k['lead']}줄(화자 표기로 보임) · [ ]만 있는 줄 {k['only']}줄"
+        f"(효과음·음악, 또는 다음 줄 대사의 화자) · 줄 중간 [ ] {k['mid']}줄",
+        f"  - [ ] 안에 '음악'·music {k['music']}개 · [ ] 안이 '-다'로 끝남(서술형) {k['verb']}개",
+        f"  - 소괄호: 소괄호로 시작하는 줄 {k['paren0']}줄 · 소괄호가 든 줄 {k['paren']}줄",
+        f"  - ♪가 든 큐 {k['note']}개 · #이 든 줄 {k['hash']}줄",
+        f"  - 대문자 화자명(NAME:)으로 시작하는 줄 {k['caps']}줄 · 하이픈(-)으로 시작하는 줄 {k['hyphen']}줄",
+        f"  - 줄 길이: 가장 긴 줄 {longest}자 · 16자 넘는 줄 {k['l16']}줄 · 20자 넘는 줄 {k['l20']}줄 · 42자 넘는 줄 {k['l42']}줄",
+        f"  - {AN8}가 든 큐 {k['an8']}개 ({AN8}는 화면 위쪽에 띄우는 위치 명령이지 내용이 아니다)"])
+
+
+def stats_block(docs):
+    tracks = [d for d in docs if d in CUES]
+    if not tracks:
+        return ""
+    return ("트랙 표기 통계 — 코드가 트랙 **전체**(읽지 않은 구간 포함)를 센 개수. 큐 번호가 아니다.\n"
+            "표기가 있다·없다·몇 번이라고 쓸 때는 이 수를 먼저 보라. 규정과 다른 표기가 몇 개라도 있으면 '모두 규정에 맞다'고 쓰지 마라.\n"
+            + "\n".join(track_stats(d) for d in tracks) + "\n\n")
+
+
+def _pool(notes):
+    """인용문을 찾아볼 원문 = 읽은 청크 + 맞대기 보기로 본 짝 큐 본문(공백·문장부호 무시)."""
+    import metrics
+    cue_text = {(d, c[0]): c[3] for d in {d for n in notes for d, _ in n.get("짝", [])} for c in CUES[d]}
+    parts = [CHUNKS[n["청크"]] for n in notes] + [cue_text.get((d, k), "") for n in notes for d, k in n.get("짝", [])]
+    text = "\n".join(parts)
+    return metrics._norm(text) + "\n" + metrics._norm(metrics.TAGS.sub("", text))
+
+
+def check_quotes(t, question, draft, notes):
+    """집필 인용문 대조(B·B+): 틀린 인용 문장만 골라 한 번 다시 쓰게 하고, 고친 문장도 틀리면 지운다.
+    돌려주는 것: (원고, {'틀림': n, '고침': n, '지움': n, '사례': [...]})"""
+    import metrics
+    tracks = {CHUNK_DOC[n["청크"]] for n in notes if n["청크"] in CHUNK_TIME}
+    pool = _pool(notes)
+    spans = [(CHUNK_DOC[n["청크"]], CHUNK_CUES[n["청크"]]) for n in notes if n["청크"] in CHUNK_CUES]
+    pairs = {(d, k) for n in notes for d, k in n.get("짝", [])}
+    seen_cue = lambda d, k: (d, k) in pairs or any(d == x and a <= k <= b for x, (a, b) in spans)
+    mod = sys.modules[__name__]
+    issues = metrics.quote_issues(draft, tracks, pool, mod, seen_cue)
+    rec = {"틀림": len(issues), "고침": 0, "지움": 0, "사례": [[s[:200], k] for s, k, _ in issues][:10]}
+    if not issues:
+        return draft, rec
+    # 번호를 키로 받는다 — 목록으로 받으면 모델이 하나를 빼먹었을 때 뒤 문장의 수정문이 앞 문장 자리에 들어간다
+    keys = [str(i) for i in range(1, len(issues) + 1)]
+    shape = "{" + ", ".join(f'"{k}": "{k}번 고친 문장"' for k in keys) + "}"
+    with _cost_lock:
+        COST["check_ask"] += 1
+    lines = "\n".join(f"{i}. 문장: {s}\n   문제: {why}" for i, (s, _, why) in enumerate(issues, 1))
+    out = ask(f"""{_brief(t, question)}
+
+네가 쓴 원고에서 아래 문장의 인용문이 원문과 맞지 않는다고 코드가 확인했다.
+{lines}
+
+문장마다 고친 문장 하나를 써라.
+- '실제 본문'이 주어졌으면 인용문과 설명을 그 본문에 맞게 고쳐라. 본문에 없는 내용을 지어내지 마라.
+- 원문에 없는 인용문이면 따옴표 인용을 빼고 메모에 있는 사실만 남겨라. 남길 것이 없으면 빈 문자열("")을 써서 그 문장을 지운다.
+- «자료 제목»과 '큐 N' 표기는 원래 문장처럼 유지하라.
+
+JSON으로만 답하라. 키는 위 문장 번호다: {shape}""", "sub", as_json=True)
+    if not isinstance(out, dict) or not any(k in out for k in keys):
+        rec["고침없음"] = True        # 답을 못 받았다(JSON 실패 등) — 멀쩡한 문장까지 지우지 않게 원고를 그대로 둔다
+        return draft, rec
+    for k, (sent, _, _) in zip(keys, issues):
+        rep = str(out.get(k) or "").strip()
+        if rep and not metrics.quote_issues(rep, tracks, pool, mod, seen_cue):
+            draft = draft.replace(sent, rep, 1)
+            rec["고침"] += 1
+        else:
+            draft = draft.replace(sent, "", 1)
+            rec["지움"] += 1
+    # 지운 자리에 남은 겹공백만 정리한다(줄 머리 들여쓰기는 그대로)
+    return "\n".join(re.sub(r"(?<=\S)[ \t]{2,}", " ", ln).rstrip() for ln in draft.split("\n")).strip(), rec
+
+
 def write_section(t, question, notes):
     got = [n for n in notes if not irrelevant(n["메모"])]
     if not got:
@@ -762,7 +984,7 @@ def write_section(t, question, notes):
 인용할 수 있는 자료:
 {titles or "(없음)"}
 
-메모:
+{stats_block(sorted(seen_docs(got)))}메모:
 {memo}
 
 JSON으로만 답하라: {{"원고": "...", "충분": true 또는 false, "부족": "부족하면 무엇이 비었는지, 충분하면 빈 문자열"}}"""
@@ -772,6 +994,16 @@ JSON으로만 답하라: {{"원고": "...", "충분": true 또는 false, "부족
 def irrelevant(memo):
     """'관련 없음' 판정. 모델이 '관련 없음.'처럼 마침표를 붙여 내기도 한다."""
     return re.sub(r"[\s.。!]", "", memo) == "관련없음"
+
+
+def _progress(event):
+    """조사관이 청크 하나를 읽을 때마다 LangGraph 사용자 정의 스트림으로 알린다(데모의 진행 표시).
+    stream_mode에 'custom'이 없으면(invoke·절제 실험) 아무것도 안 한다. 청크 id·제목만 보내고 원문은 안 보낸다."""
+    try:
+        from langgraph.config import get_stream_writer
+        get_stream_writer()(event)
+    except Exception:          # 그래프 밖에서 부른 경우 등 — 진행 표시는 결과에 영향이 없어야 한다
+        pass
 
 
 def researcher(s):
@@ -786,6 +1018,10 @@ def researcher(s):
     # - 규정을 앞에 두는 이유: 뒤에 두었더니 트랙을 읽는 동안 잣대가 없어 'SDH에 있고 강제 자막에 없는 것'을 모두 위반으로 적었다
     # 재위임 바퀴에는 기준 예산이 없다(규정은 1바퀴에 읽었고, 빈 칸은 대개 자료 쪽이다).
     rule_budget = 0 if prior else t.get("기준예산", 0)
+    # 핵심 규정 먼저(A): 맡은 트랙 종류별 필수 규정(required_rules) 중 아직 한 청크도 안 읽은 문서의 청크만 후보로 준다.
+    # 모델에게 규정 후보 전부를 주었더니 q11이 가이드 I절만 두 번 고르고 «넷플릭스 강제 자막 이해하기»를 안 읽었다
+    must = list(dict.fromkeys(r for d in t["시작문서"] if _chunks_of(d) and _is_track(d)
+                              for r in required_rules(_doc_of(d))))
     for step in range(t["예산"] + rule_budget):
         seeds = [c for d in t["시작문서"] for c in _chunks_of(d) if c not in read]
         rule_phase = 1 <= step <= rule_budget
@@ -793,23 +1029,43 @@ def researcher(s):
             cid = seeds[0]
         else:
             cands = frontier(t, read, t["피하기"], rules_only=rule_phase)
+            if rule_phase:
+                done = {CHUNK_DOC[c] for c in read}
+                first = [c for r in must if r not in done for c in DOC_CHUNKS[r]]
+                first = [c for c in first if c not in set(t["피하기"])] or first   # 남의 구역은 피한다(다 피해지면 무시)
+                cands = first[:25] or cands
             if not cands:
                 break
             cid = pick_next(t, q, notes, cands)
-        notes.append({"청크": cid, "메모": read_one(cid, t, q, notes), "짝": pair_seen(cid, t)})
+        memo, chk = _read_one(cid, t, q, notes)
+        notes.append({"청크": cid, "메모": memo, "짝": pair_seen(cid, t), **({"대조": chk} if chk else {})})
         read.append(cid)
         new.append(cid)
+        _progress({"절": t["절"], "바퀴": t["바퀴"], "읽음": len(new), "예산": t["예산"] + rule_budget, "청크": cid,
+                   "관련없음": irrelevant(memo), "되물음": bool(chk)})
     out = write_section(t, q, notes)
     draft = str(out.get("원고", ""))
+    qfix = None
+    if 설정["스위치"]["인용대조"] and draft:
+        before = len(citations(draft))
+        draft, qfix = check_quotes(t, q, draft, notes)
+        # 인용 문장을 많이 지웠으면 모델이 먼저 낸 '충분'을 믿지 않는다 → 재위임 대상
+        if qfix["지움"] and (qfix["지움"] >= 3 or qfix["지움"] * 10 >= before * 3):
+            out = {**out, "충분": False,
+                   "부족": f"인용이 원문과 맞지 않는 문장 {qfix['지움']}개를 지웠다. 그 사례의 큐를 다시 읽고 원문대로 적어야 한다."}
     cites = citations(draft)
     read_docs = seen_docs(notes)
     sec = {"절": t["절"], "번호": t["번호"], "바퀴": t["바퀴"],
            "원고": draft, "읽은청크": read, "새로읽은": new, "메모": notes,
            "인용": cites, "허위인용": sorted({c for c, _ in cites if c not in read_docs}),
            # 빈 원고·문자열 "false"를 충분으로 세지 않는다(빈 원고가 재위임에서 빠졌다)
-           "충분": out.get("충분") is True and bool(draft), "부족": str(out.get("부족", "")) or "원고가 비었다", "지시": t["지시"]}
+           "충분": out.get("충분") is True and bool(draft), "부족": str(out.get("부족", "")) or "원고가 비었다", "지시": t["지시"],
+           **({"인용대조": qfix} if qfix else {})}
     useless = sum(1 for n in notes[-len(new):] if irrelevant(n["메모"])) if new else 0
-    line = (f"   ③ 조사관   «{t['절']}» {len(new)}청크 새로 읽음(관련 없음 {useless}) → {len(draft)}자 · 인용 {len(cites)}"
+    fixed = sum(1 for n in notes[-len(new):] if n.get("대조")) if new else 0
+    line = (f"   ③ 조사관   «{t['절']}» {len(new)}청크 새로 읽음(관련 없음 {useless}"
+            + (f" · 메모 되물음 {fixed}" if fixed else "") + f") → {len(draft)}자 · 인용 {len(cites)}"
+            + (f" · 인용 틀림 {qfix['틀림']}(고침 {qfix['고침']} · 지움 {qfix['지움']})" if qfix and qfix["틀림"] else "")
             + ("" if sec["충분"] else f" · 부족 신고: {sec['부족'][:60]}"))
     return {"sections": [sec], "visited": [(t["번호"], c, t["바퀴"]) for c in new], "log": [line]}
 
@@ -947,7 +1203,10 @@ def _append_locked(path, line):
 
 def slim(row):
     """runs.jsonl에 올리는 한 줄 — 메모(자막 원문 발췌)는 빼고 길이만 남긴다."""
-    return {**row, "sections": [{**x, "메모": [{"청크": n["청크"], "메모글자": len(n["메모"]), "관련없음": irrelevant(n["메모"])}
+    def lite(x):   # 지워진 인용 문장(자막 발췌가 섞임)은 로컬 runs/에만 — 올리는 쪽엔 종류만
+        return {**x, "인용대조": {**x["인용대조"], "사례": [k for _, k in x["인용대조"].get("사례", [])]}} if x.get("인용대조") else x
+    return {**row, "sections": [{**lite(x), "메모": [{"청크": n["청크"], "메모글자": len(n["메모"]), "관련없음": irrelevant(n["메모"]),
+                                              **({"대조": n["대조"]} if n.get("대조") else {})}
                                              for n in x["메모"]]} for x in row["sections"]]}
 
 
@@ -980,10 +1239,26 @@ def out_dir():
     return OUT.relative_to(ROOT).as_posix()
 
 
-def run(question, qid="custom", tag="기본", quiet=False, keep=True):
+def run(question, qid="custom", tag="기본", quiet=False, keep=True, on_step=None):
+    """on_step(노드 이름, 그 노드가 남긴 로그 줄들) — 주면 LangGraph 스트리밍으로 노드가 끝날 때마다 부른다(데모의 진행 표시).
+    병렬 조사관은 한 명이 끝날 때마다 따로 온다. 조사관이 청크를 하나 읽을 때마다는 on_step("읽기", [사건 dict])로 온다(custom 스트림).
+    결과는 invoke와 같다(마지막 'values'가 최종 State)."""
     for k in COST:
         COST[k] = 0
-    out = build().invoke({"question": question}, {"recursion_limit": 80})
+    app, cfg = build(), {"recursion_limit": 80}
+    if on_step is None:
+        out = app.invoke({"question": question}, cfg)
+    else:
+        out = None
+        for mode, chunk in app.stream({"question": question}, cfg, stream_mode=["updates", "values", "custom"]):
+            if mode == "values":
+                out = chunk
+                continue
+            if mode == "custom":
+                on_step("읽기", [chunk])
+                continue
+            for node, upd in chunk.items():
+                on_step(node, (upd or {}).get("log", []) if isinstance(upd, dict) else [])
     if not quiet:
         for line in out["log"]:
             print(line)
@@ -1006,7 +1281,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("q", nargs="?", default="s02" if SAMPLE else "q03", help="질문 id(q01~q12, 예시 모드는 s01~s03) 또는 질문 원문")
     ap.add_argument("--sample", action="store_true", help="예시 코퍼스로(모듈을 불러올 때 이미 반영됨)")
-    ap.add_argument("--off", default="", help="끌 스위치, 쉼표로: 배정검사,남의구역,재위임")
+    ap.add_argument("--off", default="", help="끌 스위치, 쉼표로: 배정검사,남의구역,재위임,인용대조")
     ap.add_argument("--tag", default="", help="저장 이름표(기본: 끈 스위치로 만듦)")
     ap.add_argument("--no-save", action="store_true")
     a = ap.parse_args()

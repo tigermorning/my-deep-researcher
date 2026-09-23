@@ -23,10 +23,10 @@ ROOT = Path(__file__).resolve().parent
 if __import__("os").environ.get("DR_SAMPLE") == "1" or "--sample" in sys.argv:
     # 집계·runs.jsonl 재생성이 output/ 바로 아래(본 실험)를 읽고 쓴다 — 예시 실행이 섞이지 않게 막는다
     raise SystemExit("ablation.py는 본 코퍼스 전용이다. 예시 코퍼스는 graph.py / baseline.py에 --sample로 돌린다")
-CONFIGS = {"기본": [], "배정검사끔": ["배정검사"], "남의구역끔": ["남의구역"], "재위임끔": ["재위임"]}
+CONFIGS = {"기본": [], "배정검사끔": ["배정검사"], "남의구역끔": ["남의구역"], "재위임끔": ["재위임"], "인용대조끔": ["인용대조"]}
 ALARMS = ["허위인용", "범위밖큐", "무근거절", "무효배정"]
 KEYS = ["격리율", "중복률", "규정대조율", "트랙도달률", "읽고안쓴문서", "인용밀도", "인용문일치율", "인용문검사", "예산소진율",
-        "재위임절", "되돌림", "읽은청크", "보고서글자", "호출", "재질문"]
+        "재위임절", "되돌림", "인용고침", "메모고침", "읽은청크", "보고서글자", "호출", "재질문", "대조질문"]
 
 
 def launch(cmd):
@@ -55,7 +55,7 @@ def recompute(names):
         r = load(n)
         m0 = r["metrics"]
         cost = {"calls": m0["호출"], "coord_chars": m0["코디네이터글자"], "sub_chars": m0["조사관글자"],
-                "retry": m0.get("재질문", 0), "json_fail": m0.get("JSON실패", 0)}
+                "retry": m0.get("재질문", 0), "json_fail": m0.get("JSON실패", 0), "check_ask": m0.get("대조질문", 0)}
         s = {"question": r["question"], "visited": r["visited"],
              "report": (ROOT / "output" / r["report_file"]).read_text(encoding="utf-8"),
              "plan": {**r["plan"], "채택": {str(x["번호"]): x for x in r["sections"]}}}
@@ -92,7 +92,10 @@ def aggregate(names):
             continue
         rows.append(r)
     table = {"_제외": dropped}
+    switches = {s for offs in CONFIGS.values() for s in offs}
     for r in rows:
+        # 스위치 키가 모자란 실행 = 스위치가 생기기 전 코드로 돈 실행(output/v1 등) — 같은 칸에 섞지 않는다
+        assert set(r["config"]["스위치"]) == switches, f"{r['run']}: 스위치 {sorted(r['config']['스위치'])} — 코드 버전이 다른 실행"
         cell = table.setdefault(r["qid"], {}).setdefault(r["tag"], {"runs": [], "metrics": []})
         cell["runs"].append(r["run"])
         cell["metrics"].append(r["metrics"])

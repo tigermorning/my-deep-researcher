@@ -3,6 +3,7 @@ data/corpus.json
 data/raw/
 output/runs/
 output/dev/runs/
+output/v1/runs/
 *.lock
 
 # 비밀
