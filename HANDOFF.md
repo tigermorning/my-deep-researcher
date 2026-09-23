@@ -1,7 +1,9 @@
 # HANDOFF — 딥리서처 에이전트 과제 (모두의연구소 9강 프로젝트)
 
-- 작성: 2026-09-23 (두 세션, 둘 다 tigermorning 블로그 저장소를 작업 폴더로 열고 진행)
-- 상태 (2026-09-23 세 번째 세션): **①~⑥ 전부 구현 · metrics/baseline/ablation/app 완성 · 절제 실험 75실행 완료 · REPORT.md·README.md 작성.** 커밋 `4126647`, 공개 저장소 https://github.com/tigermorning/my-deep-researcher 에 push 완료
+- 작성: 2026-09-23 (세 세션. 앞 두 세션은 tigermorning 블로그 저장소를, 세 번째 세션은 이 폴더를 작업 폴더로 열고 진행)
+- 상태 (2026-09-23 세 번째 세션 끝): **①~⑥ 전부 구현 · metrics/baseline/ablation/app 완성 · 절제 실험 75실행 · REPORT.md·README.md 작성 · 과제 본문·루브릭 대조 검토와 보강 완료.**
+  - 공개 저장소 https://github.com/tigermorning/my-deep-researcher , 마지막 커밋 `f34f2c5`(이 문서 갱신 커밋 제외), push 완료
+  - 과제 제출(URL 업로드)은 사용자가 한다 — 제출 후 수정 불가라고 루브릭 페이지에 적혀 있음
 
 ## 0. 새 세션 시작 절차
 
@@ -11,6 +13,7 @@
    - `python scripts/build_corpus.py` → 끝에 `총 60건 … 링크 없는 문서: 없음`이 나와야 함
      - 원본이 로컬에만 있음: `~/Documents/subtitle-tc-generator-project/…`(규정·자막 모음) + **D 드라이브 mkv**. D 드라이브가 없으면 mkv 트랙은 `data/raw/tracks/` 캐시로만 돌아감
      - `data/corpus.json`·`data/raw/`는 gitignored — 새 PC면 반드시 다시 빌드
+     - 원본이 없는 PC: `graph.py`는 안내 메시지를 내고 멈춘다. 규모·links는 `data/corpus_index.json`, 결과는 `output/`, 데모는 코퍼스 없이 뜬다
    - `PYTHONIOENCODING=utf-8 python graph.py q03` → ①~⑥ 로그 + `저장: output/reports/…md` (gpt-4o-mini 약 60호출)
      - OpenAI 키: 환경변수 → `.env` → `~/Documents/openai_key.env` 순으로 찾음. 호출당 gpt-4o-mini 1회
 4. 기획 노드를 고쳤으면 **12문항 전체를 다시 돌린다** (규칙끼리 부딪힌 전력이 있음 — 6-2절 표). `PYTHONIOENCODING=utf-8 python scripts/check_plans.py` (전체) 또는 `… check_plans.py q07 q10` (일부)
@@ -316,10 +319,36 @@ my-deep-researcher/
 ### 작업 요령 (이번에 겪은 것)
 
 - gpt-4o-mini: '관련 없으면 관련 없음' 지시를 **원문 앞**에 두면 원문을 안 읽고 '관련 없음'. 지시는 원문 뒤에
-- 파이썬 패치에 `
-`이 들어가면 heredoc 금지(이번에도 두 번 SyntaxError) — Write 도구로 스크래치패드 .py
+- 파이썬 패치에 `\n`이 들어가면 heredoc 금지(이번에도 치환 불일치 1번 · SyntaxError 1번, 이 문서의 한 줄이 깨진 적도 있음) — Write 도구로 스크래치패드 .py
 - 지표를 바꾸면 API 없이 `python ablation.py --collect --recompute` 후 `output/runs.jsonl` 재생성(스크립트 없음 — 세션 기록의 코드 참고, 필요하면 ablation.py에 옵션으로 넣을 것)
 - `output/runs/`(메모 = 자막 발췌)는 gitignore. `output/dev/`는 버그 수정 전 실행(실패 사례 증거용)
+- 모두연 페이지 읽기: Claude in Chrome으로 열고 `document.body.innerText`를 `window` 변수에 담아 1,300자씩 잘라 읽음. 루브릭 페이지는 대기 루프를 돌리면 45초 타임아웃이 나서, 한 번 더 부르면 바로 읽혔다
+
+### 같은 날 이어서 한 것
+
+- **과제 본문·루브릭 대조 검토** (Claude in Chrome, 2026-09-23)
+  - 본문 필수 5단계·제출 구조·REPORT 가이드 6항목·루브릭 3항목 모두 대응하는 근거가 있음
+  - 새 클론(코퍼스·메모 없음)에서 `app.py`를 streamlit AppTest로 돌려 오류 없이 뜨는 것 확인
+  - 빈틈 4가지를 보강(`f34f2c5`)
+    - `data/corpus_index.json` + `scripts/export_index.py`: 본문 없이 제목·메타·글자 수·토큰 수·청크 수·links. 합계가 빌드 결과와 같음(60건 · 836,287토큰 · 6.53배 · 링크 134)
+    - `graph.py`: 코퍼스가 없으면 이유와 대안을 알려 주고 멈춤(새 클론에서 확인)
+    - REPORT 8절 격리율 표: 코디네이터 입력은 설정과 무관하게 1.5만~1.7만 자, 조사관은 5만~49만 자
+    - REPORT 2절 역할 명단 표 + 실제 사용 횟수(대조 123 · 관행 18 · 규정 10 · 예외 0), 8절 '흔한 사고 셋' 대응표, 11절 회고 소제목
+  - 남은 한계: 채점자는 원문이 없어 코퍼스 빌드부터 직접 돌려 볼 수 없음. 색인·75실행·데모로 대신함
+- **인용문일치율 지표 추가**(나란히 읽기에서 번호는 맞고 내용이 틀린 인용을 발견한 뒤). 따옴표 규칙을 두 번 고치고 75실행을 전부 다시 계산 — REPORT 5절·8절
+- **저장소 구성 결정**: TC 생성기 저장소에 합치지 않고 따로 둠(사용자 결정). 이유 = 제출은 기본 URL만 내므로 합치면 URL이 TC 생성기 첫 화면을 가리키고, 과제가 정한 루트 구조와 어긋남. 대신 두 README에 서로 링크(`dc4c8b0`, TC 쪽 `7f5490b`)
+
+### TC 생성기 저장소에서 한 일 (링크를 넣다가 이어진 일)
+
+- 링크 커밋이 pre-commit 훅(`tools/hooks/pre-commit`: 시험 + 문서 검사)에 두 번 막혀 원인을 찾음. 코드 문제가 아니었다
+  - 원인 1: 9-21 화자 괄호 이동 작업이 본 저장소 코드와 비공개 규정 저장소(`rules/private`) 양쪽에 걸쳐 있고 둘 다 커밋 전이었다. 본 저장소 작업만 치우자 '새 규정 + 옛 코드'가 되어 "쿠팡은 소괄호로 옮긴다" 1건 실패
+  - 원인 2: 훅이 한국어 교정기(`korean-subtitle-corrector-project/korean-subtitle-corrector`)를 못 찾아 연동 시험 2건을 건너뜀 → 문서에 적힌 수(교정기 있는 환경 기준)와 어긋남
+  - 확인: 두 저장소를 커밋된 상태로 worktree에 꺼내 교정기 경로를 주자 1,208건 전부 통과
+- 사용자 요청으로 처리한 것
+  - 사용자 환경변수 `KSC_PATH` = 위 교정기 경로(새 창부터 적용)
+  - 두 저장소 커밋·push: 규정 `1cc87f2`(측정 기록) · `c669fbd`(괄호를 `markers.speaker_enclosure`로) → 본 저장소 `1759d23`(`speaker_enclosure()` + 스키마 감사 문서 + 시험 수 1214건). 규정을 먼저 push
+  - 임시 stash 삭제(지우기 전 HEAD와 대조, 차이는 시험 수 4줄뿐)
+- 주의: 그 저장소에서 작업을 잠시 치울 때 `rules/private`는 무시 폴더라 stash에 안 들어간다 — 두 저장소를 함께 봐야 한다
 
 ## 7. 지켜야 할 것
 
@@ -339,8 +368,11 @@ my-deep-researcher/
 
 ## 9. 다음 할 일
 
-1. 과제 제출: 저장소 **기본 URL만** — https://github.com/tigermorning/my-deep-researcher
+1. 과제 제출(사용자): 루브릭 페이지 'URL 업로드'에 저장소 **기본 URL만** — https://github.com/tigermorning/my-deep-researcher
+   - 제출 후 수정 불가라고 페이지에 적혀 있음. 다만 URL은 기본 주소라 제출 뒤 push한 내용도 채점 시점에 반영됨
    - `.claude/launch.json`(데모 서버 설정)은 사용자 결정으로 올리지 않음
 2. (선택) 나머지 7문항(q02·q04~06·q08·q09·q12)도 기본·대조군 1~2회씩 돌려 REPORT 표 보강 — `python ablation.py --qs q04 q08 --reps 2 --replace`
 3. (선택) 회고의 개선안: 집필 단계에서 '큐 N + 인용문'을 코드로 대조해 틀린 문장만 다시 쓰기 / 트랙 종류별 핵심 규정 먼저 읽기
-4. 알려진 작은 문제: `app.py`의 대조군 실행은 기본 예산 24(팀 실제 읽기량과 안 맞춤) · streamlit 세션 둘이 동시에 돌면 스위치·COST 전역을 공유
+4. (선택) 지표 재계산 뒤 `output/runs.jsonl` 재생성이 아직 수동(세션 기록의 코드) — `ablation.py --recompute`에 함께 넣기
+5. (선택) 역할 명단 정리: 예외 담당이 60실행에서 한 번도 안 뽑힘 — 명단을 줄이거나 예외를 묻는 질문 추가
+6. 알려진 작은 문제: `app.py`의 대조군 실행은 기본 예산 24(팀 실제 읽기량과 안 맞춤) · streamlit 세션 둘이 동시에 돌면 스위치·COST 전역을 공유
