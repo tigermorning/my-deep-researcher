@@ -1,17 +1,17 @@
 # HANDOFF — 딥리서처 에이전트 과제 (모두의연구소 9강 프로젝트)
 
 - 작성: 2026-09-23 (두 세션, 둘 다 tigermorning 블로그 저장소를 작업 폴더로 열고 진행)
-- 상태: **코퍼스·질문 확정. `graph.py` 뼈대 + ① 기획 노드 구현·실측. ②~⑥은 빈 노드.** 첫 커밋 완료, 원격 저장소 없음(GitHub 저장소는 아직 안 만듦)
+- 상태 (2026-09-23 세 번째 세션): **①~⑥ 전부 구현 · metrics/baseline/ablation/app 완성 · 절제 실험 75실행 완료 · REPORT.md·README.md 작성.** 두 번째 세션 이후 커밋 안 함, 원격 저장소 없음(GitHub 저장소는 아직 안 만듦)
 
 ## 0. 새 세션 시작 절차
 
 1. 이 폴더(`~/Documents/my-deep-researcher`)를 작업 폴더로 연다. `git status --short --branch`로 깨끗한지 확인
-2. 이 문서의 **6-2절(본체 구현)**과 **9절(다음 할 일)**부터 읽는다. 1~6절은 배경
+2. 이 문서의 **6-3절(세 번째 세션)**과 **9절(다음 할 일)**부터 읽는다. 설계·실험 결과는 `REPORT.md`가 원본. 1~6-2절은 배경
 3. 환경 확인 (한 줄씩)
    - `python scripts/build_corpus.py` → 끝에 `총 60건 … 링크 없는 문서: 없음`이 나와야 함
      - 원본이 로컬에만 있음: `~/Documents/subtitle-tc-generator-project/…`(규정·자막 모음) + **D 드라이브 mkv**. D 드라이브가 없으면 mkv 트랙은 `data/raw/tracks/` 캐시로만 돌아감
      - `data/corpus.json`·`data/raw/`는 gitignored — 새 PC면 반드시 다시 빌드
-   - `PYTHONIOENCODING=utf-8 python graph.py q03` → ① 기획 줄에 3절, ②~⑥은 "(빈 노드)"
+   - `PYTHONIOENCODING=utf-8 python graph.py q03` → ①~⑥ 로그 + `저장: output/reports/…md` (gpt-4o-mini 약 60호출)
      - OpenAI 키: 환경변수 → `.env` → `~/Documents/openai_key.env` 순으로 찾음. 호출당 gpt-4o-mini 1회
 4. 기획 노드를 고쳤으면 **12문항 전체를 다시 돌린다** (규칙끼리 부딪힌 전력이 있음 — 6-2절 표). `PYTHONIOENCODING=utf-8 python scripts/check_plans.py` (전체) 또는 `… check_plans.py q07 q10` (일부)
 
@@ -296,6 +296,31 @@ my-deep-researcher/
   - 코드로 못 잡는 실패: q02 한 번은 정답 문서(자막·SDH·CC FAQ) 자체를 안 고름
 - 호출 1회, 코디네이터 입력 약 12,700~13,000자
 
+## 6-3. 세 번째 세션 (2026-09-23) — ②~⑥ · 실험 · 보고서
+
+### 한 것
+
+- `graph.py` ②배치(남의 구역) · ③조사관(기준 예산 → 맡은 자료 예산, 맞대기 보기, 짝 구간 후보) · ④점검(채택 규칙) · ⑤종합 · ⑥평가
+- `metrics.py`(경보 4 · 견줌 11, `SPEC`에 장치 명시) · `baseline.py` · `ablation.py`(`--collect --recompute`, `--replace`) · `app.py`(streamlit, `?run=`)
+- `config.json`: 절예산 3 → **4**, `기준예산` 2 추가(규정 청크 전용)
+- 절제 실험: 5문항(q01·q03·q07·q10·q11) × 5설정 × 3회 → `output/ablation.md`
+- 캡처: `docs/demo.png`, `docs/demo_sections.png` (`scripts/capture_demo.py`, Playwright)
+- 조사관을 고친 순서 9건, 리뷰 에이전트가 잡은 버그 10건 → REPORT 3절·7절
+
+### 결론 요약 (자세히는 REPORT 8~9절)
+
+- 값을 한 장치: 배정검사(q10 끄면 트랙도달률 20%) · 재위임(q03만, 끄면 인용밀도 절반) · 분업 자체(흩어진 질문에서 대조군 트랙도달률 33~50%)
+- 값을 못 한 장치: 남의구역(중복률 켜든 끄든 0% — 시작문서 겹침은 배정검사가 이미 막음)
+- 사람만 잡은 실패: 번호는 맞고 내용·해석이 틀린 인용, 규정 적용 오류, 안 본 것(정옥림 FN의 SDH 누락)
+
+### 작업 요령 (이번에 겪은 것)
+
+- gpt-4o-mini: '관련 없으면 관련 없음' 지시를 **원문 앞**에 두면 원문을 안 읽고 '관련 없음'. 지시는 원문 뒤에
+- 파이썬 패치에 `
+`이 들어가면 heredoc 금지(이번에도 두 번 SyntaxError) — Write 도구로 스크래치패드 .py
+- 지표를 바꾸면 API 없이 `python ablation.py --collect --recompute` 후 `output/runs.jsonl` 재생성(스크립트 없음 — 세션 기록의 코드 참고, 필요하면 ablation.py에 옵션으로 넣을 것)
+- `output/runs/`(메모 = 자막 발췌)는 gitignore. `output/dev/`는 버그 수정 전 실행(실패 사례 증거용)
+
 ## 7. 지켜야 할 것
 
 - **자막 원문·넷플릭스 원문은 저작물** → 공개 저장소에 올리지 않음
@@ -314,6 +339,8 @@ my-deep-researcher/
 
 ## 9. 다음 할 일
 
-1. ② 배치: 남의 구역(다른 절 시작문서 + 이미 읽힌 청크)을 피하기 목록으로
-2. ③ 조사관: 청크 단위 읽기(`read_one` → 요약·관련 없음), 다음 청크 후보 = 같은 문서 다음 청크 · 같은 작품 다른 트랙의 **같은 시간대** 청크 · 링크 문서. 기준자료 읽기(규정 청크, 원문 트랙은 자기 구간과 같은 시간대 청크만)를 예산과 따로 셀지 결정
-3. ④ 점검(자기신고 재위임) → ⑤ 종합 → ⑥ 평가(지표) → baseline.py → ablation.py → app.py
+1. 사용자 확인 후 커밋 → GitHub 저장소 만들고 push → **기본 URL만** 제출
+   - 커밋 전 `git diff --cached --stat`. `.claude/launch.json`(데모 서버 설정)은 올릴지 사용자에게 물을 것
+2. (선택) 나머지 7문항(q02·q04~06·q08·q09·q12)도 기본·대조군 1~2회씩 돌려 REPORT 표 보강 — `python ablation.py --qs q04 q08 --reps 2 --replace`
+3. (선택) 회고의 개선안: 집필 단계에서 '큐 N + 인용문'을 코드로 대조해 틀린 문장만 다시 쓰기 / 트랙 종류별 핵심 규정 먼저 읽기
+4. 알려진 작은 문제: `app.py`의 대조군 실행은 기본 예산 24(팀 실제 읽기량과 안 맞춤) · streamlit 세션 둘이 동시에 돌면 스위치·COST 전역을 공유

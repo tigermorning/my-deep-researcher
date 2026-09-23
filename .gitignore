@@ -1,6 +1,9 @@
 # 저작물 원문 — 로컬 전용
 data/corpus.json
 data/raw/
+output/runs/
+output/dev/runs/
+*.lock
 
 # 비밀
 .env
