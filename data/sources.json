@@ -1,0 +1,103 @@
+{
+  "_설명": "코퍼스에 넣을 문서 목록. 본문은 저작물이라 저장소에 없고, scripts/build_corpus.py가 로컬 원본에서 읽어 data/corpus.json을 만든다.",
+  "roots": {
+    "netflix": "~/Documents/subtitle-tc-generator-project/subtitle-help-agent/sources/raw",
+    "worker": "~/Documents/subtitle-tc-generator-project/subtitle-tc-generator/rules/private/sources/작업자-자료",
+    "subs": "~/Documents/subtitle-tc-generator-project/subtitle-tc-generator/학습한 TC 및 자막 모음",
+    "mkv": "D:/",
+    "ffmpeg": "~/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-9.0-full_build/bin/ffmpeg.exe"
+  },
+  "netflix": [
+    ["216001127", "넷플릭스 한국어 스타일 가이드", "ko"],
+    ["217350977", "넷플릭스 영어(미국) 스타일 가이드", "en"],
+    ["215767517", "넷플릭스 일본어 스타일 가이드", "ja"],
+    ["215986007", "넷플릭스 중국어 간체 스타일 가이드", "zh-Hans"],
+    ["215994807", "넷플릭스 중국어 번체 스타일 가이드", "zh-Hant"],
+    ["215758617", "넷플릭스 스타일 가이드: 일반 요구사항", null],
+    ["360051554394", "넷플릭스 스타일 가이드: 자막 타이밍", null],
+    ["219375728", "넷플릭스 스타일 가이드: 자막 템플릿", null],
+    ["115000239632", "넷플릭스 스타일 가이드: 부가·마케팅 자료", null],
+    ["47550553159187", "넷플릭스 스타일 가이드 개정(2025년 12월)", null],
+    ["217558918", "넷플릭스 강제 자막 이해하기", null],
+    ["224198488", "넷플릭스 FAQ: 강제 자막이란", null],
+    ["38231659498387", "넷플릭스 FAQ: 자막·SDH·CC의 차이", null],
+    ["215274938", "넷플릭스 FAQ: 한 줄 최대 글자 수", null],
+    ["115001349591", "넷플릭스 FAQ: 대사·강제 자막 읽기 속도", null],
+    ["115000303132", "넷플릭스 FAQ: 기존 자막 파일로 작업할 때", null],
+    ["115000783548", "넷플릭스 FAQ: 한국어 회차 제목 번역", null],
+    ["115000980747", "넷플릭스 FAQ: 영상물등급위원회(NPFP)", null],
+    ["38231759314835", "넷플릭스 FAQ: 템플릿과 피벗 템플릿", null],
+    ["38231879488019", "넷플릭스 FAQ: 타이밍 지침이 있는 이유", null],
+    ["38232067474835", "넷플릭스 FAQ: 모든 자막이 스타일 가이드를 따라야 하나", null],
+    ["215581437", "넷플릭스 허용 글리프 목록", null],
+    ["360000119507", "넷플릭스 현지화 모범 사례: 영화·시리즈", null],
+    ["360000120207", "넷플릭스 현지화 모범 사례: 논픽션", null],
+    ["360000586227", "넷플릭스 회차·작품 제목 번역", null],
+    ["5110291703443", "넷플릭스 용어 도구 개요(KNP)", null]
+  ],
+  "splits": {
+    "_설명": "언어별 가이드를 절 단위 문서로 나눈다. [제목, 시작 줄 정규식, 적용 종류]. 첫 표시 앞 머리말은 앞 두 절에 붙인다",
+    "216001127": [
+      ["넷플릭스 한국어 스타일 가이드 I. 번역 자막", "^# I\\. Korean Subtitles$", "translation"],
+      ["넷플릭스 한국어 스타일 가이드 II. SDH", "^# II\\. Korean Subtitles for the Deaf", "sdh"],
+      ["넷플릭스 한국어 스타일 가이드: 개정 이력", "^Change Log:", null]
+    ],
+    "217350977": [
+      ["넷플릭스 영어(미국) 스타일 가이드 I. SDH", "^I\\. Subtitles for the Deaf", "sdh"],
+      ["넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막", "^II\\. Subtitles$", "translation"],
+      ["넷플릭스 영어(미국) 스타일 가이드: 개정 이력", "^Change Log:", null]
+    ]
+  },
+  "worker": [
+    ["작업 기본 원칙.txt", "작업자 자료: 작업 기본 원칙"],
+    ["표기_맞춤법_번역.txt", "작업자 자료: 표기·맞춤법·번역"],
+    ["SDH 효과음 예시.txt", "작업자 자료: SDH 효과음 예시"],
+    ["작업 준비 및 기본 규칙.txt", "작업자 자료: 작업 준비 및 기본 규칙"]
+  ],
+  "extra_links": [
+    ["38231659498387", "216001127", "SDH·CC 정의 FAQ ↔ 한국어 가이드 SDH 절"],
+    ["38231659498387", "217350977", "SDH·CC 정의 FAQ ↔ 영어 가이드 SDH 절"],
+    ["215274938", "216001127", "한 줄 글자 수 FAQ가 언어별 가이드의 글자 수 항목을 가리킴"],
+    ["215274938", "215758617", "한 줄 글자 수 FAQ ↔ 일반 요구사항"],
+    ["115001349591", "217558918", "강제 자막 많은 콘텐츠 읽기 속도 FAQ ↔ 강제 자막 이해하기"],
+    ["115001349591", "360000120207", "다큐 읽기 속도 FAQ ↔ 논픽션 현지화 모범 사례"],
+    ["115000303132", "215758617", "기존 파일 번역자 크레디트 FAQ ↔ 일반 요구사항(크레디트 항목)"],
+    ["115000980747", "216001127", "영상물등급위원회 FAQ ↔ 한국어 가이드"],
+    ["115000980747", "5110291703443", "영상물등급위원회 FAQ가 KNP 작성을 요구"],
+    ["38231759314835", "219375728", "템플릿 FAQ ↔ 자막 템플릿 가이드"],
+    ["38231879488019", "360051554394", "타이밍 지침 이유 FAQ ↔ 자막 타이밍 가이드"],
+    ["38232067474835", "215758617", "모든 자막이 가이드를 따르나 FAQ ↔ 일반 요구사항"],
+    ["360000586227", "115000783548", "제목 번역 글 ↔ 한국어 회차 제목 FAQ"],
+    ["360000586227", "5110291703443", "제목 번역은 KNP로 제공된다고 명시"],
+    ["작업 준비 및 기본 규칙.txt", "5110291703443", "작업자 자료의 KNP/Glossary 절 ↔ 넷플릭스 KNP 개요"],
+    ["작업 준비 및 기본 규칙.txt", "작업 기본 원칙.txt", "같은 작업자의 절차 문서 짝"]
+  ],
+  "tracks": [
+    {"work": "대체 등산을 왜 하는 건데?", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "srt": "넷플릭스_Take a Hike/E01_한국어_SDH.srt"},
+    {"work": "대체 등산을 왜 하는 건데?", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "영어 번역", "lang": "en", "kind": "translation", "srt": "넷플릭스_Take a Hike/E01_영어_번역.srt"},
+    {"work": "대체 등산을 왜 하는 건데?", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "일본어 번역", "lang": "ja", "kind": "translation", "srt": "넷플릭스_Take a Hike/E01_일본어_번역.srt"},
+    {"work": "대체 등산을 왜 하는 건데?", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "중국어 간체", "lang": "zh-Hans", "kind": "translation", "srt": "넷플릭스_Take a Hike/E01_중국어_간체.srt"},
+    {"work": "대체 등산을 왜 하는 건데?", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "중국어 번체", "lang": "zh-Hant", "kind": "translation", "srt": "넷플릭스_Take a Hike/E01_중국어_번체.srt"},
+    {"work": "이서진의 달라달라", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "srt": "넷플릭스_Ready or Not Texas/E01_한국어_SDH.srt"},
+    {"work": "이서진의 달라달라", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "중국어 간체", "lang": "zh-Hans", "kind": "translation", "srt": "넷플릭스_Ready or Not Texas/E01_중국어_간체.srt"},
+    {"work": "이서진의 달라달라", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E01", "track": "중국어 번체", "lang": "zh-Hant", "kind": "translation", "srt": "넷플릭스_Ready or Not Texas/E01_중국어_번체.srt"},
+    {"work": "도라이버 시즌2", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E15", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "srt": "넷플릭스_도라이버 시즌2/E15_한국어_SDH.srt"},
+    {"work": "라스트 하우스", "orig_lang": "en", "platform": "넷플릭스", "ep": null, "track": "한국어 번역", "lang": "ko", "kind": "translation", "mkv": "The.Last.House.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv", "stream": 25},
+    {"work": "라스트 하우스", "orig_lang": "en", "platform": "넷플릭스", "ep": null, "track": "일본어 번역", "lang": "ja", "kind": "translation", "mkv": "The.Last.House.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv", "stream": 24},
+    {"work": "라스트 하우스", "orig_lang": "en", "platform": "넷플릭스", "ep": null, "track": "중국어 간체", "lang": "zh-Hans", "kind": "translation", "mkv": "The.Last.House.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv", "stream": 39},
+    {"work": "라스트 하우스", "orig_lang": "en", "platform": "넷플릭스", "ep": null, "track": "중국어 번체", "lang": "zh-Hant", "kind": "translation", "mkv": "The.Last.House.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv", "stream": 40},
+    {"work": "라스트 하우스", "orig_lang": "en", "platform": "넷플릭스", "ep": null, "track": "영어 자막", "lang": "en", "kind": "subtitle", "mkv": "The.Last.House.2026.1080p.WEBRip.10Bit.DDP5.1.x265-NeoNoir.mkv", "stream": 2},
+    {"work": "메이드 인 코리아", "orig_lang": "ko", "platform": "디즈니+", "ep": "E01", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "srt": "디즈니플러스_메이드 인 코리아/E01_한국어_SDH.srt"},
+    {"work": "메이드 인 코리아", "orig_lang": "ko", "platform": "디즈니+", "ep": "E06", "track": "한국어 강제 자막", "lang": "ko", "kind": "forced", "mkv": "Made in Korea.S01E06.1080p.WEB-DL.DDP5.1.H264-AYA.mkv", "stream": 2},
+    {"work": "메이드 인 코리아", "orig_lang": "ko", "platform": "디즈니+", "ep": "E06", "track": "한국어 CC", "lang": "ko", "kind": "sdh", "mkv": "Made in Korea.S01E06.1080p.WEB-DL.DDP5.1.H264-AYA.mkv", "stream": 3},
+    {"work": "히틀러 심판의 날", "orig_lang": "en", "platform": "디즈니+", "ep": "E01", "track": "한국어 번역", "lang": "ko", "kind": "translation", "srt": "디즈니플러스_히틀러 심판의 날/E01_한국어_번역.srt"},
+    {"work": "히틀러 심판의 날", "orig_lang": "en", "platform": "디즈니+", "ep": "E01", "track": "영어 SDH", "lang": "en", "kind": "sdh", "srt": "디즈니플러스_히틀러 심판의 날/E01_영어_SDH.srt"},
+    {"work": "지금 불륜이 문제가 아닙니다", "orig_lang": "ko", "platform": "쿠팡플레이", "ep": "E05", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "srt": "쿠팡플레이_The Affair Was Just the Beginning/E05_한국어_SDH.srt"},
+    {"work": "아파트", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E09", "track": "한국어 강제 자막", "lang": "ko", "kind": "forced", "mkv": "【高清剧集网发布 www.BTHDTV.com】公寓黑风暴[第09-10集][简繁英字幕].The.Apartment.Job.S01.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV/The.Apartment.Job.S01E09.Episode.9.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV.mkv", "stream": 2},
+    {"work": "아파트", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E09", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "mkv": "【高清剧集网发布 www.BTHDTV.com】公寓黑风暴[第09-10集][简繁英字幕].The.Apartment.Job.S01.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV/The.Apartment.Job.S01E09.Episode.9.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV.mkv", "stream": 3},
+    {"work": "오싹한 연애", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E09", "track": "한국어 강제 자막", "lang": "ko", "kind": "forced", "mkv": "【高清剧集网发布 www.BTHDTV.com】毛骨悚然的恋爱[第09-10集][简繁英字幕].Spooky.in.Love.S01.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV/Spooky.in.Love.S01E09.Episode.9.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV.mkv", "stream": 2},
+    {"work": "오싹한 연애", "orig_lang": "ko", "platform": "넷플릭스", "ep": "E09", "track": "한국어 SDH", "lang": "ko", "kind": "sdh", "mkv": "【高清剧集网发布 www.BTHDTV.com】毛骨悚然的恋爱[第09-10集][简繁英字幕].Spooky.in.Love.S01.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV/Spooky.in.Love.S01E09.Episode.9.1080p.NF.WEB-DL.AAC.2.0.H.264-BlackTV.mkv", "stream": 3},
+    {"work": "데이비드 블레인: 초현실 마술 여행", "orig_lang": "en", "platform": "디즈니+", "ep": "E05", "track": "한국어 번역", "lang": "ko", "kind": "translation", "mkv": "David Blaine Do Not Attempt S01E05 South Africa 720p DSNP WEB-DL DDP5 1 H 264-RAWR[EZTVx.to].mkv", "stream": 12},
+    {"work": "데이비드 블레인: 초현실 마술 여행", "orig_lang": "en", "platform": "디즈니+", "ep": "E05", "track": "영어 SDH", "lang": "en", "kind": "sdh", "mkv": "David Blaine Do Not Attempt S01E05 South Africa 720p DSNP WEB-DL DDP5 1 H 264-RAWR[EZTVx.to].mkv", "stream": 4}
+  ]
+}

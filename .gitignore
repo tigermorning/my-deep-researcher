@@ -1,0 +1,10 @@
+# 저작물 원문 — 로컬 전용
+data/corpus.json
+data/raw/
+
+# 비밀
+.env
+*.env
+
+__pycache__/
+.venv/
