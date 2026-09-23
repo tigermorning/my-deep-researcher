@@ -1220,7 +1220,9 @@ def save(out, qid, tag):
         (od / sub).mkdir(parents=True, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     name = f"{qid}_{tag}_{stamp}_{os.getpid() % 10000:04d}"
-    (od / "reports" / f"{name}.md").write_text(out["report"], encoding="utf-8")
+    import metrics   # 보고서 파일에는 작품 제목에서 트랙 종류를 뗀 표기로(인용 검사·지표는 이미 끝남)
+    (od / "reports" / f"{name}.md").write_text(metrics.display_titles(out["report"], metrics.track_labels(META)),
+                                              encoding="utf-8")
     secs = [v for _, v in sorted(_latest(out["plan"]["채택"]).items())]
     row = {"run": name, "qid": qid, "tag": tag, "question": out["question"], "config": 설정,
            "plan": {k: v for k, v in out["plan"].items() if not k.startswith("_") and k != "채택"},

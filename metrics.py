@@ -38,6 +38,25 @@ CUE_N = re.compile(r"큐\s*(\d+)")
 TRACK_CITE = re.compile(r"«([^»]+)»")
 
 
+def track_labels(meta):
+    """트랙 문서 이름 '작품 [회차] 트랙' → (작품 [회차], 트랙). meta = 코퍼스의 meta(또는 corpus_index의 docs)."""
+    return {t: (t[: -len(m["track"])].rstrip(), m["track"]) for t, m in meta.items()
+            if m.get("type") == "track" and m.get("track") and t.endswith(" " + m["track"])}
+
+
+def display_titles(text, labels):
+    """보여 줄 때만: «작품 E05 한국어 번역» 큐 3 → «작품 E05» 한국어 번역 큐 3.
+    사용자 지시 — 보고서 본문의 작품 제목에 트랙 종류를 붙이지 않는다. 인용 검사·지표는 문서 이름(트랙 포함)으로
+    따로 하므로 영향이 없고, 글자 수도 같다(ablation --recompute의 보고서글자)."""
+    def sub(m):
+        title, chunk = re.match(r"(.*?)(\s*#\d+/\d+)?$", m.group(1).strip()).groups()
+        if title not in labels:
+            return m.group(0)
+        work, track = labels[title]
+        return f"«{work}» {track}{chunk or ''}"
+    return TRACK_CITE.sub(sub, text)
+
+
 def _norm(s):
     s = re.sub(r"\{\\an\d\}|[\u202a\u202c]", "", s)
     return re.sub(r"[\s/\-–—.,!?…·]", "", s)

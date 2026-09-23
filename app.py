@@ -31,6 +31,16 @@ QUESTIONS_FILE = ROOT / "data" / ("sample_questions.json" if SAMPLE else "questi
 st.set_page_config(page_title="자막 규정 딥리서처", layout="wide")
 
 
+@st.cache_data
+def labels():
+    """원고를 보여 줄 때 작품 제목에서 트랙 종류를 떼는 표(metrics.display_titles). 코퍼스 없이도 뜨게 — 저장소에 있는 색인에서."""
+    f = ROOT / "data" / ("sample_corpus.json" if SAMPLE else "corpus_index.json")
+    if not f.exists():
+        return {}
+    c = json.loads(f.read_text(encoding="utf-8"))
+    return metrics.track_labels(c["meta"] if SAMPLE else c["docs"])
+
+
 @st.cache_data(ttl=5)
 def list_runs():
     rows = {}
@@ -211,7 +221,7 @@ with tab_sec:
                 irrelevant = note.get("관련없음", text is not None and re.sub(r"[\s.。!]", "", text) == "관련없음")
                 b.markdown(f"{n}. `{cid}` ({visited.get(cid, '이전')}바퀴)" + (" — _관련 없음_" if irrelevant else ""))
             st.markdown("**쓴 것(원고)**")
-            st.markdown(sec["원고"] or "_(재료를 찾지 못해 원고 없음)_")
+            st.markdown(metrics.display_titles(sec["원고"], labels()) if sec["원고"] else "_(재료를 찾지 못해 원고 없음)_")
             if false:
                 st.warning("읽지 않은 자료를 인용: " + ", ".join(dict.fromkeys(false)))
             if not sec["충분"]:
