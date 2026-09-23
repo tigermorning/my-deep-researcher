@@ -32,7 +32,8 @@
 | `scripts/build_corpus.py` | 로컬 원본 → `data/corpus.json` |
 | `scripts/check_plans.py` | ① 기획만 12문항에 돌려 목차 검사 |
 | `scripts/export_index.py` | `corpus.json` → `corpus_index.json`(본문 제외) |
-| `scripts/capture_demo.py` | README용 데모 화면 캡처 |
+| `scripts/capture_demo.py` | README용 데모 화면 캡처(지난 실행 두 장 · 실행 중 진행 표시 한 장) |
+| `tests/test_review.py` | 가짜 LLM으로 그래프 전체를 돌려 ④ 점검(재위임·채택 규칙)을 시험 — API 호출 없음 |
 | `output/` | `runs.jsonl` · `ablation.json` · `ablation.md` · `reports/` (v2, 118실행) |
 | `output/v1/` | 첫 판 104실행 기록(고치기 전 비교용) |
 | `output/sample/` | 예시 코퍼스 실행 결과(본 실험과 분리) |
@@ -150,17 +151,31 @@ PYTHONIOENCODING=utf-8 python ablation.py --collect --recompute
 streamlit run app.py
 ```
 
+- 테스트(API 호출 없음 · 예시 코퍼스 · 표준 `unittest`라 설치할 것 없음)
+
+```bash
+PYTHONIOENCODING=utf-8 python -m unittest discover -s tests -v
+```
+
+  - 가짜 LLM이 대본대로 답하고, 진짜 OpenAI 클라이언트는 부르면 바로 실패하게 막아 둠
+  - 보는 것: 재작성본의 유효 인용이 줄거나 비면 지난 원고를 지킴(되돌림) · 늘면 새 원고 채택 · 바퀴 상한에서 멈춤 · 재위임 스위치를 끄면 실제로 1바퀴 · 가짜 실행도 ⑥ 평가까지 가고 호출 수가 가짜가 받은 수와 같음
+  - 규칙을 일부러 망가뜨려(항상 덮어쓰기 · 스위치 무시 · 상한 없음 · 되돌릴 때 읽은 청크 안 넘김) 네 경우 모두 테스트가 실패하는 것을 확인함
+
 ## 데모 화면
 
 - 지난 실행을 고르거나 새로 실행(질문 · 팀/대조군 · 스위치)
 - 실행 중에는 LangGraph 스트리밍으로 진행을 바로 보여 줌: 노드가 끝날 때마다 로그, 조사관이 청크를 하나 읽을 때마다 절별 진행표(읽음/예산 · 방금 읽은 청크)
 - 탭: 보고서 · 절마다 누가 무엇을(배정 → 읽은 순서 → 원고 → 부족 신고) · 기획(코드가 고친 것) · 지표 · 로그
-- 캡처: `python scripts/capture_demo.py <실행 이름>` (streamlit을 띄운 상태에서, Playwright 필요)
+- 캡처(streamlit을 띄운 상태에서, Playwright 필요)
+  - 지난 실행: `python scripts/capture_demo.py <실행 이름>` — API 호출 없음
+  - 진행 표시: `DR_SAMPLE=1 streamlit run app.py --server.port 8502` 뒤 `python scripts/capture_demo.py --progress s02 --port 8502` — 새 실행을 하나 돌림(예시 코퍼스 약 25호출)
 - `?run=<실행 이름>`으로 특정 실행을 바로 연다
 
 ![데모 첫 화면](docs/demo.png)
 
 ![절마다 누가 무엇을](docs/demo_sections.png)
+
+![실행 중 진행 표시(예시 코퍼스)](docs/demo_progress.png)
 
 ## 저작권·비밀
 

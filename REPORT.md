@@ -653,6 +653,10 @@ flowchart TD
 
 ![절마다 누가 무엇을](docs/demo_sections.png)
 
+- 실행 중 진행 표시(예시 코퍼스 s02): 절마다 읽음/예산과 방금 읽은 청크, 노드가 끝날 때마다 그 노드의 로그 — LangGraph 스트리밍(`updates` · `custom`)
+
+![실행 중 진행 표시](docs/demo_progress.png)
+
 ## 11. 회고
 
 ### 가장 공들인 부분
