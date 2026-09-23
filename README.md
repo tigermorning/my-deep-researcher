@@ -7,6 +7,7 @@
 - 부족하다고 신고한 절만 다시 보낸다
 - 정답표·판정 모델 없이 코드로 지표를 잰다
 - 설계·실험·실패 분석은 [REPORT.md](REPORT.md)
+- 자료 출처: 작성자의 자막 도구 [subtitle-tc-generator](https://github.com/tigermorning/subtitle-tc-generator)를 만들며 모은 규정·자막(원문은 로컬 전용). 코드는 그 저장소에 의존하지 않는다
 
 ## 구조
 
