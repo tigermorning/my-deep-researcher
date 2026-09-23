@@ -1,0 +1,1113 @@
+{
+ "_설명": "corpus.json에서 본문만 뺀 색인. 원문(자막·규정)은 저작물이라 저장소에 없다 — scripts/build_corpus.py로 로컬에서 만든다",
+ "_수집일": "2026-09-23",
+ "합계": {
+  "문서": 60,
+  "규정": 34,
+  "트랙": 26,
+  "글자": 1609245,
+  "토큰(o200k_base)": 836287,
+  "gpt-4o-mini 창 대비": 6.53,
+  "청크": 227,
+  "링크(무향)": 134,
+  "링크 없는 문서": []
+ },
+ "docs": {
+  "넷플릭스 한국어 스타일 가이드 I. 번역 자막": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "ko",
+   "source_id": "216001127",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/216001127",
+   "section": "translation",
+   "chars": 12150,
+   "tokens": 2830,
+   "chunks": 2
+  },
+  "넷플릭스 한국어 스타일 가이드 II. SDH": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "ko",
+   "source_id": "216001127",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/216001127",
+   "section": "sdh",
+   "chars": 11093,
+   "tokens": 3094,
+   "chunks": 2
+  },
+  "넷플릭스 한국어 스타일 가이드: 개정 이력": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "ko",
+   "source_id": "216001127",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/216001127",
+   "section": null,
+   "chars": 7572,
+   "tokens": 1778,
+   "chunks": 1
+  },
+  "넷플릭스 영어(미국) 스타일 가이드 I. SDH": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "en",
+   "source_id": "217350977",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/217350977",
+   "section": "sdh",
+   "chars": 21773,
+   "tokens": 4848,
+   "chunks": 3
+  },
+  "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "en",
+   "source_id": "217350977",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/217350977",
+   "section": "translation",
+   "chars": 21071,
+   "tokens": 4683,
+   "chunks": 3
+  },
+  "넷플릭스 영어(미국) 스타일 가이드: 개정 이력": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "en",
+   "source_id": "217350977",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/217350977",
+   "section": null,
+   "chars": 9811,
+   "tokens": 2598,
+   "chunks": 1
+  },
+  "넷플릭스 일본어 스타일 가이드": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "ja",
+   "source_id": "215767517",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215767517",
+   "chars": 45282,
+   "tokens": 10633,
+   "chunks": 4
+  },
+  "넷플릭스 중국어 간체 스타일 가이드": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "zh-Hans",
+   "source_id": "215986007",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215986007",
+   "chars": 21249,
+   "tokens": 5142,
+   "chunks": 3
+  },
+  "넷플릭스 중국어 번체 스타일 가이드": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": "zh-Hant",
+   "source_id": "215994807",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215994807",
+   "chars": 26939,
+   "tokens": 6778,
+   "chunks": 3
+  },
+  "넷플릭스 스타일 가이드: 일반 요구사항": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "215758617",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215758617",
+   "chars": 7824,
+   "tokens": 1703,
+   "chunks": 1
+  },
+  "넷플릭스 스타일 가이드: 자막 타이밍": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "360051554394",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360051554394",
+   "chars": 9432,
+   "tokens": 1986,
+   "chunks": 1
+  },
+  "넷플릭스 스타일 가이드: 자막 템플릿": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "219375728",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/219375728",
+   "chars": 26997,
+   "tokens": 5679,
+   "chunks": 4
+  },
+  "넷플릭스 스타일 가이드: 부가·마케팅 자료": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "115000239632",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/115000239632",
+   "chars": 7802,
+   "tokens": 1632,
+   "chunks": 1
+  },
+  "넷플릭스 스타일 가이드 개정(2025년 12월)": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "47550553159187",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/47550553159187",
+   "chars": 4417,
+   "tokens": 918,
+   "chunks": 1
+  },
+  "넷플릭스 강제 자막 이해하기": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "217558918",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/217558918",
+   "chars": 4114,
+   "tokens": 856,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 강제 자막이란": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "224198488",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/224198488",
+   "chars": 1389,
+   "tokens": 300,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 자막·SDH·CC의 차이": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "38231659498387",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/38231659498387",
+   "chars": 1529,
+   "tokens": 338,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 한 줄 최대 글자 수": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "215274938",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215274938",
+   "chars": 1392,
+   "tokens": 308,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 대사·강제 자막 읽기 속도": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "115001349591",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/115001349591",
+   "chars": 1304,
+   "tokens": 274,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 기존 자막 파일로 작업할 때": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "115000303132",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/115000303132",
+   "chars": 1387,
+   "tokens": 284,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 한국어 회차 제목 번역": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "115000783548",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/115000783548",
+   "chars": 914,
+   "tokens": 193,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 영상물등급위원회(NPFP)": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "115000980747",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/115000980747",
+   "chars": 2031,
+   "tokens": 463,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 템플릿과 피벗 템플릿": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "38231759314835",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/38231759314835",
+   "chars": 1112,
+   "tokens": 222,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 타이밍 지침이 있는 이유": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "38231879488019",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/38231879488019",
+   "chars": 708,
+   "tokens": 156,
+   "chunks": 1
+  },
+  "넷플릭스 FAQ: 모든 자막이 스타일 가이드를 따라야 하나": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "38232067474835",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/38232067474835",
+   "chars": 340,
+   "tokens": 93,
+   "chunks": 1
+  },
+  "넷플릭스 허용 글리프 목록": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "215581437",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/215581437",
+   "chars": 195,
+   "tokens": 58,
+   "chunks": 1
+  },
+  "넷플릭스 현지화 모범 사례: 영화·시리즈": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "360000119507",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360000119507",
+   "chars": 4923,
+   "tokens": 1016,
+   "chunks": 1
+  },
+  "넷플릭스 현지화 모범 사례: 논픽션": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "360000120207",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360000120207",
+   "chars": 4566,
+   "tokens": 937,
+   "chunks": 1
+  },
+  "넷플릭스 회차·작품 제목 번역": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "360000586227",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360000586227",
+   "chars": 3417,
+   "tokens": 723,
+   "chunks": 1
+  },
+  "넷플릭스 용어 도구 개요(KNP)": {
+   "type": "rule",
+   "platform": "넷플릭스",
+   "lang": null,
+   "source_id": "5110291703443",
+   "url": "https://partnerhelp.netflixstudios.com/hc/en-us/articles/5110291703443",
+   "chars": 224,
+   "tokens": 70,
+   "chunks": 1
+  },
+  "작업자 자료: 작업 기본 원칙": {
+   "type": "rule",
+   "platform": "넷플릭스·디즈니+·쿠팡플레이 실무",
+   "lang": "ko",
+   "source_id": "작업 기본 원칙.txt",
+   "chars": 22192,
+   "tokens": 13850,
+   "chunks": 2
+  },
+  "작업자 자료: 표기·맞춤법·번역": {
+   "type": "rule",
+   "platform": "넷플릭스·디즈니+·쿠팡플레이 실무",
+   "lang": "ko",
+   "source_id": "표기_맞춤법_번역.txt",
+   "chars": 27356,
+   "tokens": 15662,
+   "chunks": 3
+  },
+  "작업자 자료: SDH 효과음 예시": {
+   "type": "rule",
+   "platform": "넷플릭스·디즈니+·쿠팡플레이 실무",
+   "lang": "ko",
+   "source_id": "SDH 효과음 예시.txt",
+   "chars": 6376,
+   "tokens": 5204,
+   "chunks": 1
+  },
+  "작업자 자료: 작업 준비 및 기본 규칙": {
+   "type": "rule",
+   "platform": "넷플릭스·디즈니+·쿠팡플레이 실무",
+   "lang": "ko",
+   "source_id": "작업 준비 및 기본 규칙.txt",
+   "chars": 8771,
+   "tokens": 5308,
+   "chunks": 1
+  },
+  "대체 등산을 왜 하는 건데? E01 한국어 SDH": {
+   "type": "track",
+   "work": "대체 등산을 왜 하는 건데?",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 623,
+   "chars": 34628,
+   "tokens": 20763,
+   "chunks": 5
+  },
+  "대체 등산을 왜 하는 건데? E01 영어 번역": {
+   "type": "track",
+   "work": "대체 등산을 왜 하는 건데?",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "영어 번역",
+   "orig_lang": "ko",
+   "lang": "en",
+   "kind": "translation",
+   "cues": 1654,
+   "chars": 115276,
+   "tokens": 52051,
+   "chunks": 15
+  },
+  "대체 등산을 왜 하는 건데? E01 일본어 번역": {
+   "type": "track",
+   "work": "대체 등산을 왜 하는 건데?",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "일본어 번역",
+   "orig_lang": "ko",
+   "lang": "ja",
+   "kind": "translation",
+   "cues": 1890,
+   "chars": 98861,
+   "tokens": 62018,
+   "chunks": 13
+  },
+  "대체 등산을 왜 하는 건데? E01 중국어 간체": {
+   "type": "track",
+   "work": "대체 등산을 왜 하는 건데?",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "중국어 간체",
+   "orig_lang": "ko",
+   "lang": "zh-Hans",
+   "kind": "translation",
+   "cues": 1660,
+   "chars": 84813,
+   "tokens": 52791,
+   "chunks": 11
+  },
+  "대체 등산을 왜 하는 건데? E01 중국어 번체": {
+   "type": "track",
+   "work": "대체 등산을 왜 하는 건데?",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "중국어 번체",
+   "orig_lang": "ko",
+   "lang": "zh-Hant",
+   "kind": "translation",
+   "cues": 1696,
+   "chars": 86243,
+   "tokens": 55787,
+   "chunks": 11
+  },
+  "이서진의 달라달라 E01 한국어 SDH": {
+   "type": "track",
+   "work": "이서진의 달라달라",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 465,
+   "chars": 23309,
+   "tokens": 14385,
+   "chunks": 3
+  },
+  "이서진의 달라달라 E01 중국어 간체": {
+   "type": "track",
+   "work": "이서진의 달라달라",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "중국어 간체",
+   "orig_lang": "ko",
+   "lang": "zh-Hans",
+   "kind": "translation",
+   "cues": 743,
+   "chars": 33959,
+   "tokens": 21162,
+   "chunks": 5
+  },
+  "이서진의 달라달라 E01 중국어 번체": {
+   "type": "track",
+   "work": "이서진의 달라달라",
+   "platform": "넷플릭스",
+   "ep": "E01",
+   "track": "중국어 번체",
+   "orig_lang": "ko",
+   "lang": "zh-Hant",
+   "kind": "translation",
+   "cues": 743,
+   "chars": 33959,
+   "tokens": 22156,
+   "chunks": 5
+  },
+  "도라이버 시즌2 E15 한국어 SDH": {
+   "type": "track",
+   "work": "도라이버 시즌2",
+   "platform": "넷플릭스",
+   "ep": "E15",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 1076,
+   "chars": 56252,
+   "tokens": 33905,
+   "chunks": 8
+  },
+  "라스트 하우스 한국어 번역": {
+   "type": "track",
+   "work": "라스트 하우스",
+   "platform": "넷플릭스",
+   "ep": null,
+   "track": "한국어 번역",
+   "orig_lang": "en",
+   "lang": "ko",
+   "kind": "translation",
+   "cues": 1207,
+   "chars": 57222,
+   "tokens": 34489,
+   "chunks": 8
+  },
+  "라스트 하우스 일본어 번역": {
+   "type": "track",
+   "work": "라스트 하우스",
+   "platform": "넷플릭스",
+   "ep": null,
+   "track": "일본어 번역",
+   "orig_lang": "en",
+   "lang": "ja",
+   "kind": "translation",
+   "cues": 1118,
+   "chars": 49457,
+   "tokens": 30877,
+   "chunks": 7
+  },
+  "라스트 하우스 중국어 간체": {
+   "type": "track",
+   "work": "라스트 하우스",
+   "platform": "넷플릭스",
+   "ep": null,
+   "track": "중국어 간체",
+   "orig_lang": "en",
+   "lang": "zh-Hans",
+   "kind": "translation",
+   "cues": 1198,
+   "chars": 54894,
+   "tokens": 34152,
+   "chunks": 7
+  },
+  "라스트 하우스 중국어 번체": {
+   "type": "track",
+   "work": "라스트 하우스",
+   "platform": "넷플릭스",
+   "ep": null,
+   "track": "중국어 번체",
+   "orig_lang": "en",
+   "lang": "zh-Hant",
+   "kind": "translation",
+   "cues": 1281,
+   "chars": 57192,
+   "tokens": 36692,
+   "chunks": 8
+  },
+  "라스트 하우스 영어 자막": {
+   "type": "track",
+   "work": "라스트 하우스",
+   "platform": "넷플릭스",
+   "ep": null,
+   "track": "영어 자막",
+   "orig_lang": "en",
+   "lang": "en",
+   "kind": "subtitle",
+   "cues": 1202,
+   "chars": 78343,
+   "tokens": 33313,
+   "chunks": 10
+  },
+  "메이드 인 코리아 E01 한국어 SDH": {
+   "type": "track",
+   "work": "메이드 인 코리아",
+   "platform": "디즈니+",
+   "ep": "E01",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 755,
+   "chars": 38662,
+   "tokens": 23229,
+   "chunks": 5
+  },
+  "메이드 인 코리아 E06 한국어 강제 자막": {
+   "type": "track",
+   "work": "메이드 인 코리아",
+   "platform": "디즈니+",
+   "ep": "E06",
+   "track": "한국어 강제 자막",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "forced",
+   "cues": 40,
+   "chars": 1970,
+   "tokens": 1209,
+   "chunks": 1
+  },
+  "메이드 인 코리아 E06 한국어 CC": {
+   "type": "track",
+   "work": "메이드 인 코리아",
+   "platform": "디즈니+",
+   "ep": "E06",
+   "track": "한국어 CC",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 970,
+   "chars": 49074,
+   "tokens": 29790,
+   "chunks": 7
+  },
+  "히틀러 심판의 날 E01 한국어 번역": {
+   "type": "track",
+   "work": "히틀러 심판의 날",
+   "platform": "디즈니+",
+   "ep": "E01",
+   "track": "한국어 번역",
+   "orig_lang": "en",
+   "lang": "ko",
+   "kind": "translation",
+   "cues": 563,
+   "chars": 31763,
+   "tokens": 19473,
+   "chunks": 4
+  },
+  "히틀러 심판의 날 E01 영어 SDH": {
+   "type": "track",
+   "work": "히틀러 심판의 날",
+   "platform": "디즈니+",
+   "ep": "E01",
+   "track": "영어 SDH",
+   "orig_lang": "en",
+   "lang": "en",
+   "kind": "sdh",
+   "cues": 626,
+   "chars": 56945,
+   "tokens": 21549,
+   "chunks": 8
+  },
+  "지금 불륜이 문제가 아닙니다 E05 한국어 SDH": {
+   "type": "track",
+   "work": "지금 불륜이 문제가 아닙니다",
+   "platform": "쿠팡플레이",
+   "ep": "E05",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 768,
+   "chars": 38648,
+   "tokens": 23450,
+   "chunks": 5
+  },
+  "아파트 E09 한국어 강제 자막": {
+   "type": "track",
+   "work": "아파트",
+   "platform": "넷플릭스",
+   "ep": "E09",
+   "track": "한국어 강제 자막",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "forced",
+   "cues": 3,
+   "chars": 164,
+   "tokens": 103,
+   "chunks": 1
+  },
+  "아파트 E09 한국어 SDH": {
+   "type": "track",
+   "work": "아파트",
+   "platform": "넷플릭스",
+   "ep": "E09",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 1424,
+   "chars": 70498,
+   "tokens": 42692,
+   "chunks": 9
+  },
+  "오싹한 연애 E09 한국어 강제 자막": {
+   "type": "track",
+   "work": "오싹한 연애",
+   "platform": "넷플릭스",
+   "ep": "E09",
+   "track": "한국어 강제 자막",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "forced",
+   "cues": 46,
+   "chars": 2328,
+   "tokens": 1428,
+   "chunks": 1
+  },
+  "오싹한 연애 E09 한국어 SDH": {
+   "type": "track",
+   "work": "오싹한 연애",
+   "platform": "넷플릭스",
+   "ep": "E09",
+   "track": "한국어 SDH",
+   "orig_lang": "ko",
+   "lang": "ko",
+   "kind": "sdh",
+   "cues": 1097,
+   "chars": 55148,
+   "tokens": 33704,
+   "chunks": 7
+  },
+  "데이비드 블레인: 초현실 마술 여행 E05 한국어 번역": {
+   "type": "track",
+   "work": "데이비드 블레인: 초현실 마술 여행",
+   "platform": "디즈니+",
+   "ep": "E05",
+   "track": "한국어 번역",
+   "orig_lang": "en",
+   "lang": "ko",
+   "kind": "translation",
+   "cues": 555,
+   "chars": 28539,
+   "tokens": 17209,
+   "chunks": 4
+  },
+  "데이비드 블레인: 초현실 마술 여행 E05 영어 SDH": {
+   "type": "track",
+   "work": "데이비드 블레인: 초현실 마술 여행",
+   "platform": "디즈니+",
+   "ep": "E05",
+   "track": "영어 SDH",
+   "orig_lang": "en",
+   "lang": "en",
+   "kind": "sdh",
+   "cues": 610,
+   "chars": 43446,
+   "tokens": 17293,
+   "chunks": 6
+  }
+ },
+ "links": {
+  "넷플릭스 FAQ: 강제 자막이란": [
+   "넷플릭스 강제 자막 이해하기",
+   "메이드 인 코리아 E06 한국어 강제 자막",
+   "아파트 E09 한국어 강제 자막",
+   "오싹한 연애 E09 한국어 강제 자막"
+  ],
+  "넷플릭스 FAQ: 기존 자막 파일로 작업할 때": [
+   "넷플릭스 스타일 가이드: 일반 요구사항"
+  ],
+  "넷플릭스 FAQ: 대사·강제 자막 읽기 속도": [
+   "넷플릭스 강제 자막 이해하기",
+   "넷플릭스 현지화 모범 사례: 논픽션"
+  ],
+  "넷플릭스 FAQ: 모든 자막이 스타일 가이드를 따라야 하나": [
+   "넷플릭스 스타일 가이드: 일반 요구사항"
+  ],
+  "넷플릭스 FAQ: 영상물등급위원회(NPFP)": [
+   "넷플릭스 용어 도구 개요(KNP)",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "넷플릭스 한국어 스타일 가이드: 개정 이력"
+  ],
+  "넷플릭스 FAQ: 자막·SDH·CC의 차이": [
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "넷플릭스 한국어 스타일 가이드: 개정 이력"
+  ],
+  "넷플릭스 FAQ: 타이밍 지침이 있는 이유": [
+   "넷플릭스 스타일 가이드: 자막 타이밍"
+  ],
+  "넷플릭스 FAQ: 템플릿과 피벗 템플릿": [
+   "넷플릭스 스타일 가이드: 자막 템플릿"
+  ],
+  "넷플릭스 FAQ: 한 줄 최대 글자 수": [
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "넷플릭스 한국어 스타일 가이드: 개정 이력"
+  ],
+  "넷플릭스 FAQ: 한국어 회차 제목 번역": [
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 회차·작품 제목 번역"
+  ],
+  "넷플릭스 강제 자막 이해하기": [
+   "넷플릭스 FAQ: 강제 자막이란",
+   "넷플릭스 FAQ: 대사·강제 자막 읽기 속도",
+   "메이드 인 코리아 E06 한국어 강제 자막",
+   "아파트 E09 한국어 강제 자막",
+   "오싹한 연애 E09 한국어 강제 자막"
+  ],
+  "넷플릭스 스타일 가이드 개정(2025년 12월)": [
+   "넷플릭스 스타일 가이드: 부가·마케팅 자료",
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력",
+   "넷플릭스 일본어 스타일 가이드",
+   "넷플릭스 중국어 번체 스타일 가이드"
+  ],
+  "넷플릭스 스타일 가이드: 부가·마케팅 자료": [
+   "넷플릭스 스타일 가이드 개정(2025년 12월)"
+  ],
+  "넷플릭스 스타일 가이드: 일반 요구사항": [
+   "넷플릭스 FAQ: 기존 자막 파일로 작업할 때",
+   "넷플릭스 FAQ: 모든 자막이 스타일 가이드를 따라야 하나",
+   "넷플릭스 FAQ: 한 줄 최대 글자 수",
+   "넷플릭스 FAQ: 한국어 회차 제목 번역",
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력",
+   "넷플릭스 일본어 스타일 가이드",
+   "넷플릭스 중국어 간체 스타일 가이드",
+   "넷플릭스 중국어 번체 스타일 가이드",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "넷플릭스 한국어 스타일 가이드: 개정 이력",
+   "넷플릭스 허용 글리프 목록",
+   "라스트 하우스 영어 자막"
+  ],
+  "넷플릭스 스타일 가이드: 자막 타이밍": [
+   "넷플릭스 FAQ: 타이밍 지침이 있는 이유",
+   "넷플릭스 스타일 가이드: 자막 템플릿"
+  ],
+  "넷플릭스 스타일 가이드: 자막 템플릿": [
+   "넷플릭스 FAQ: 템플릿과 피벗 템플릿",
+   "넷플릭스 스타일 가이드: 자막 타이밍",
+   "넷플릭스 중국어 번체 스타일 가이드",
+   "넷플릭스 허용 글리프 목록"
+  ],
+  "넷플릭스 영어(미국) 스타일 가이드 I. SDH": [
+   "넷플릭스 FAQ: 자막·SDH·CC의 차이",
+   "넷플릭스 스타일 가이드 개정(2025년 12월)",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력",
+   "넷플릭스 현지화 모범 사례: 논픽션",
+   "넷플릭스 현지화 모범 사례: 영화·시리즈"
+  ],
+  "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막": [
+   "넷플릭스 FAQ: 자막·SDH·CC의 차이",
+   "넷플릭스 스타일 가이드 개정(2025년 12월)",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력",
+   "넷플릭스 현지화 모범 사례: 논픽션",
+   "넷플릭스 현지화 모범 사례: 영화·시리즈",
+   "대체 등산을 왜 하는 건데? E01 영어 번역"
+  ],
+  "넷플릭스 영어(미국) 스타일 가이드: 개정 이력": [
+   "넷플릭스 FAQ: 자막·SDH·CC의 차이",
+   "넷플릭스 스타일 가이드 개정(2025년 12월)",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 현지화 모범 사례: 논픽션",
+   "넷플릭스 현지화 모범 사례: 영화·시리즈"
+  ],
+  "넷플릭스 용어 도구 개요(KNP)": [
+   "넷플릭스 FAQ: 영상물등급위원회(NPFP)",
+   "넷플릭스 회차·작품 제목 번역",
+   "작업자 자료: 작업 준비 및 기본 규칙"
+  ],
+  "넷플릭스 일본어 스타일 가이드": [
+   "넷플릭스 스타일 가이드 개정(2025년 12월)",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "대체 등산을 왜 하는 건데? E01 일본어 번역",
+   "라스트 하우스 일본어 번역"
+  ],
+  "넷플릭스 중국어 간체 스타일 가이드": [
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "대체 등산을 왜 하는 건데? E01 중국어 간체",
+   "라스트 하우스 중국어 간체",
+   "이서진의 달라달라 E01 중국어 간체"
+  ],
+  "넷플릭스 중국어 번체 스타일 가이드": [
+   "넷플릭스 스타일 가이드 개정(2025년 12월)",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 스타일 가이드: 자막 템플릿",
+   "대체 등산을 왜 하는 건데? E01 중국어 번체",
+   "라스트 하우스 중국어 번체",
+   "이서진의 달라달라 E01 중국어 번체"
+  ],
+  "넷플릭스 한국어 스타일 가이드 I. 번역 자막": [
+   "넷플릭스 FAQ: 영상물등급위원회(NPFP)",
+   "넷플릭스 FAQ: 자막·SDH·CC의 차이",
+   "넷플릭스 FAQ: 한 줄 최대 글자 수",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "넷플릭스 한국어 스타일 가이드: 개정 이력",
+   "라스트 하우스 한국어 번역",
+   "아파트 E09 한국어 강제 자막",
+   "오싹한 연애 E09 한국어 강제 자막",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "넷플릭스 한국어 스타일 가이드 II. SDH": [
+   "넷플릭스 FAQ: 영상물등급위원회(NPFP)",
+   "넷플릭스 FAQ: 자막·SDH·CC의 차이",
+   "넷플릭스 FAQ: 한 줄 최대 글자 수",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드: 개정 이력",
+   "대체 등산을 왜 하는 건데? E01 한국어 SDH",
+   "도라이버 시즌2 E15 한국어 SDH",
+   "아파트 E09 한국어 SDH",
+   "오싹한 연애 E09 한국어 SDH",
+   "이서진의 달라달라 E01 한국어 SDH",
+   "작업자 자료: SDH 효과음 예시",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "넷플릭스 한국어 스타일 가이드: 개정 이력": [
+   "넷플릭스 FAQ: 영상물등급위원회(NPFP)",
+   "넷플릭스 FAQ: 자막·SDH·CC의 차이",
+   "넷플릭스 FAQ: 한 줄 최대 글자 수",
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드 II. SDH"
+  ],
+  "넷플릭스 허용 글리프 목록": [
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "넷플릭스 스타일 가이드: 자막 템플릿"
+  ],
+  "넷플릭스 현지화 모범 사례: 논픽션": [
+   "넷플릭스 FAQ: 대사·강제 자막 읽기 속도",
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력"
+  ],
+  "넷플릭스 현지화 모범 사례: 영화·시리즈": [
+   "넷플릭스 영어(미국) 스타일 가이드 I. SDH",
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "넷플릭스 영어(미국) 스타일 가이드: 개정 이력"
+  ],
+  "넷플릭스 회차·작품 제목 번역": [
+   "넷플릭스 FAQ: 한국어 회차 제목 번역",
+   "넷플릭스 용어 도구 개요(KNP)"
+  ],
+  "대체 등산을 왜 하는 건데? E01 영어 번역": [
+   "넷플릭스 영어(미국) 스타일 가이드 II. 번역 자막",
+   "대체 등산을 왜 하는 건데? E01 일본어 번역",
+   "대체 등산을 왜 하는 건데? E01 중국어 간체",
+   "대체 등산을 왜 하는 건데? E01 중국어 번체",
+   "대체 등산을 왜 하는 건데? E01 한국어 SDH"
+  ],
+  "대체 등산을 왜 하는 건데? E01 일본어 번역": [
+   "넷플릭스 일본어 스타일 가이드",
+   "대체 등산을 왜 하는 건데? E01 영어 번역",
+   "대체 등산을 왜 하는 건데? E01 중국어 간체",
+   "대체 등산을 왜 하는 건데? E01 중국어 번체",
+   "대체 등산을 왜 하는 건데? E01 한국어 SDH"
+  ],
+  "대체 등산을 왜 하는 건데? E01 중국어 간체": [
+   "넷플릭스 중국어 간체 스타일 가이드",
+   "대체 등산을 왜 하는 건데? E01 영어 번역",
+   "대체 등산을 왜 하는 건데? E01 일본어 번역",
+   "대체 등산을 왜 하는 건데? E01 중국어 번체",
+   "대체 등산을 왜 하는 건데? E01 한국어 SDH"
+  ],
+  "대체 등산을 왜 하는 건데? E01 중국어 번체": [
+   "넷플릭스 중국어 번체 스타일 가이드",
+   "대체 등산을 왜 하는 건데? E01 영어 번역",
+   "대체 등산을 왜 하는 건데? E01 일본어 번역",
+   "대체 등산을 왜 하는 건데? E01 중국어 간체",
+   "대체 등산을 왜 하는 건데? E01 한국어 SDH"
+  ],
+  "대체 등산을 왜 하는 건데? E01 한국어 SDH": [
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "대체 등산을 왜 하는 건데? E01 영어 번역",
+   "대체 등산을 왜 하는 건데? E01 일본어 번역",
+   "대체 등산을 왜 하는 건데? E01 중국어 간체",
+   "대체 등산을 왜 하는 건데? E01 중국어 번체",
+   "작업자 자료: SDH 효과음 예시"
+  ],
+  "데이비드 블레인: 초현실 마술 여행 E05 영어 SDH": [
+   "데이비드 블레인: 초현실 마술 여행 E05 한국어 번역",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "데이비드 블레인: 초현실 마술 여행 E05 한국어 번역": [
+   "데이비드 블레인: 초현실 마술 여행 E05 영어 SDH",
+   "작업자 자료: 작업 기본 원칙",
+   "작업자 자료: 표기·맞춤법·번역"
+  ],
+  "도라이버 시즌2 E15 한국어 SDH": [
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "작업자 자료: SDH 효과음 예시"
+  ],
+  "라스트 하우스 영어 자막": [
+   "넷플릭스 스타일 가이드: 일반 요구사항",
+   "라스트 하우스 일본어 번역",
+   "라스트 하우스 중국어 간체",
+   "라스트 하우스 중국어 번체",
+   "라스트 하우스 한국어 번역"
+  ],
+  "라스트 하우스 일본어 번역": [
+   "넷플릭스 일본어 스타일 가이드",
+   "라스트 하우스 영어 자막",
+   "라스트 하우스 중국어 간체",
+   "라스트 하우스 중국어 번체",
+   "라스트 하우스 한국어 번역"
+  ],
+  "라스트 하우스 중국어 간체": [
+   "넷플릭스 중국어 간체 스타일 가이드",
+   "라스트 하우스 영어 자막",
+   "라스트 하우스 일본어 번역",
+   "라스트 하우스 중국어 번체",
+   "라스트 하우스 한국어 번역"
+  ],
+  "라스트 하우스 중국어 번체": [
+   "넷플릭스 중국어 번체 스타일 가이드",
+   "라스트 하우스 영어 자막",
+   "라스트 하우스 일본어 번역",
+   "라스트 하우스 중국어 간체",
+   "라스트 하우스 한국어 번역"
+  ],
+  "라스트 하우스 한국어 번역": [
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "라스트 하우스 영어 자막",
+   "라스트 하우스 일본어 번역",
+   "라스트 하우스 중국어 간체",
+   "라스트 하우스 중국어 번체"
+  ],
+  "메이드 인 코리아 E01 한국어 SDH": [
+   "메이드 인 코리아 E06 한국어 CC",
+   "메이드 인 코리아 E06 한국어 강제 자막",
+   "작업자 자료: SDH 효과음 예시",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "메이드 인 코리아 E06 한국어 CC": [
+   "메이드 인 코리아 E01 한국어 SDH",
+   "메이드 인 코리아 E06 한국어 강제 자막",
+   "작업자 자료: SDH 효과음 예시",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "메이드 인 코리아 E06 한국어 강제 자막": [
+   "넷플릭스 FAQ: 강제 자막이란",
+   "넷플릭스 강제 자막 이해하기",
+   "메이드 인 코리아 E01 한국어 SDH",
+   "메이드 인 코리아 E06 한국어 CC",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "아파트 E09 한국어 SDH": [
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "아파트 E09 한국어 강제 자막",
+   "작업자 자료: SDH 효과음 예시"
+  ],
+  "아파트 E09 한국어 강제 자막": [
+   "넷플릭스 FAQ: 강제 자막이란",
+   "넷플릭스 강제 자막 이해하기",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "아파트 E09 한국어 SDH"
+  ],
+  "오싹한 연애 E09 한국어 SDH": [
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "오싹한 연애 E09 한국어 강제 자막",
+   "작업자 자료: SDH 효과음 예시"
+  ],
+  "오싹한 연애 E09 한국어 강제 자막": [
+   "넷플릭스 FAQ: 강제 자막이란",
+   "넷플릭스 강제 자막 이해하기",
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "오싹한 연애 E09 한국어 SDH"
+  ],
+  "이서진의 달라달라 E01 중국어 간체": [
+   "넷플릭스 중국어 간체 스타일 가이드",
+   "이서진의 달라달라 E01 중국어 번체",
+   "이서진의 달라달라 E01 한국어 SDH"
+  ],
+  "이서진의 달라달라 E01 중국어 번체": [
+   "넷플릭스 중국어 번체 스타일 가이드",
+   "이서진의 달라달라 E01 중국어 간체",
+   "이서진의 달라달라 E01 한국어 SDH"
+  ],
+  "이서진의 달라달라 E01 한국어 SDH": [
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "이서진의 달라달라 E01 중국어 간체",
+   "이서진의 달라달라 E01 중국어 번체",
+   "작업자 자료: SDH 효과음 예시"
+  ],
+  "작업자 자료: SDH 효과음 예시": [
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "대체 등산을 왜 하는 건데? E01 한국어 SDH",
+   "도라이버 시즌2 E15 한국어 SDH",
+   "메이드 인 코리아 E01 한국어 SDH",
+   "메이드 인 코리아 E06 한국어 CC",
+   "아파트 E09 한국어 SDH",
+   "오싹한 연애 E09 한국어 SDH",
+   "이서진의 달라달라 E01 한국어 SDH",
+   "작업자 자료: 작업 기본 원칙",
+   "지금 불륜이 문제가 아닙니다 E05 한국어 SDH"
+  ],
+  "작업자 자료: 작업 기본 원칙": [
+   "넷플릭스 한국어 스타일 가이드 I. 번역 자막",
+   "넷플릭스 한국어 스타일 가이드 II. SDH",
+   "데이비드 블레인: 초현실 마술 여행 E05 영어 SDH",
+   "데이비드 블레인: 초현실 마술 여행 E05 한국어 번역",
+   "메이드 인 코리아 E01 한국어 SDH",
+   "메이드 인 코리아 E06 한국어 CC",
+   "메이드 인 코리아 E06 한국어 강제 자막",
+   "작업자 자료: SDH 효과음 예시",
+   "작업자 자료: 작업 준비 및 기본 규칙",
+   "작업자 자료: 표기·맞춤법·번역",
+   "지금 불륜이 문제가 아닙니다 E05 한국어 SDH",
+   "히틀러 심판의 날 E01 영어 SDH",
+   "히틀러 심판의 날 E01 한국어 번역"
+  ],
+  "작업자 자료: 작업 준비 및 기본 규칙": [
+   "넷플릭스 용어 도구 개요(KNP)",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "작업자 자료: 표기·맞춤법·번역": [
+   "데이비드 블레인: 초현실 마술 여행 E05 한국어 번역",
+   "작업자 자료: 작업 기본 원칙",
+   "히틀러 심판의 날 E01 한국어 번역"
+  ],
+  "지금 불륜이 문제가 아닙니다 E05 한국어 SDH": [
+   "작업자 자료: SDH 효과음 예시",
+   "작업자 자료: 작업 기본 원칙"
+  ],
+  "히틀러 심판의 날 E01 영어 SDH": [
+   "작업자 자료: 작업 기본 원칙",
+   "히틀러 심판의 날 E01 한국어 번역"
+  ],
+  "히틀러 심판의 날 E01 한국어 번역": [
+   "작업자 자료: 작업 기본 원칙",
+   "작업자 자료: 표기·맞춤법·번역",
+   "히틀러 심판의 날 E01 영어 SDH"
+  ]
+ }
+}

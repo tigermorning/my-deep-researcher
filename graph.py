@@ -22,6 +22,12 @@ ROOT = Path(__file__).resolve().parent
 설정 = json.loads((ROOT / "config.json").read_text(encoding="utf-8"))
 
 # ---------------------------------------------------------------- 코퍼스 · 청크
+if not (ROOT / "data" / "corpus.json").exists():
+    raise SystemExit(
+        "data/corpus.json이 없다. 자막·규정 원문은 저작물이라 저장소에 올리지 않았다.\n"
+        "- 원본이 있는 PC: python scripts/build_corpus.py\n"
+        "- 원본이 없으면: 문서 목록·글자 수·links는 data/corpus_index.json, 실행 결과는 output/ 에서 볼 수 있다\n"
+        "  (데모 화면은 코퍼스 없이도 뜬다: streamlit run app.py)")
 CORPUS = json.loads((ROOT / "data" / "corpus.json").read_text(encoding="utf-8"))
 DOCS, META, LINKS = CORPUS["docs"], CORPUS["meta"], CORPUS["links"]
 

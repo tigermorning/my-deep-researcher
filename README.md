@@ -25,11 +25,22 @@
 | `app.py` | streamlit 데모 |
 | `config.json` | 절 수 · 절 예산 · 기준 예산 · 바퀴 상한 · 청크 크기 · 스위치 · 역할 명단 |
 | `data/questions.json` | 질문 12건(단일 2 · 흩어진 6 · 한 대상 4). 질문마다 `why` |
-| `data/sources.json` | 코퍼스 목록(본문 없음) |
+| `data/sources.json` | 코퍼스 수집 목록(본문 없음) |
+| `data/corpus_index.json` | 코퍼스 색인: 60건의 제목·메타·글자 수·토큰 수·청크 수 + links 전체(본문 없음) |
 | `scripts/build_corpus.py` | 로컬 원본 → `data/corpus.json` |
 | `scripts/check_plans.py` | ① 기획만 12문항에 돌려 목차 검사 |
+| `scripts/export_index.py` | `corpus.json` → `corpus_index.json`(본문 제외) |
 | `scripts/capture_demo.py` | README용 데모 화면 캡처 |
 | `output/` | `runs.jsonl` · `ablation.json` · `ablation.md` · `reports/` |
+
+## 무엇을 재현할 수 있나
+
+- 자막·규정 원문은 저작물이라 **`data/corpus.json`을 저장소에 올리지 않았다** (과제 제출 구조의 `data/corpus.json` 자리)
+- 저장소만 받아도 되는 것
+  - 코퍼스 규모·링크 확인: `data/corpus_index.json` (60건 · 1,609,245자 · 836,287토큰 = 창 6.53배 · 링크 134)
+  - 결과 보기: `output/`의 75실행(`runs.jsonl` · `ablation.md` · `reports/`)과 데모 화면(`streamlit run app.py`, 코퍼스 없이 뜬다)
+  - 지표 다시 계산은 코퍼스가 필요하다(청크 정보를 씀)
+- 원본이 있어야 되는 것: 코퍼스 빌드와 새 실행(`graph.py` · `baseline.py` · `ablation.py`). 코퍼스가 없으면 `graph.py`가 이유를 알려 주고 멈춘다
 
 ## 준비
 
