@@ -42,8 +42,8 @@ def questions():
     return json.loads(QUESTIONS_FILE.read_text(encoding="utf-8"))["questions"]
 
 
-STAGE = {"plan": "① 기획", "dispatch": "② 배치", "researcher": "③ 조사관", "review": "④ 점검",
-         "synthesize": "⑤ 종합", "evaluate": "⑥ 평가", "gate": "⑦ 승인 게이트"}
+STAGE = {"plan": "① 기획", "plan_gate": "◐ 기획 승인", "dispatch": "② 배치", "researcher": "③ 조사관",
+         "review": "④ 점검", "synthesize": "⑤ 종합", "evaluate": "⑥ 평가", "gate": "⑦ 발행 승인"}
 
 
 def live_progress(box):
@@ -118,9 +118,12 @@ with tab_pending:
         st.info("대기 중인 건이 없다. 왼쪽에서 새로 실행하거나, 기준에 걸리는 질문을 골라 본다.")
     for e in pend:
         payload = e["payload"] or {}
+        kind = payload.get("종류", "발행")   # "기획"(◐, 조사 시작 전) 또는 "발행"(⑦, 저장 전)
         started = e.get("started_at", "")
-        with st.expander(f"🕘 {e['qid']} — {e['question'][:60]} (제출 {started})", expanded=len(pend) == 1):
-            st.markdown("**고객 요청(질문)**")
+        icon = "◐" if kind == "기획" else "🕘"
+        with st.expander(f"{icon} [{kind} 게이트] {e['qid']} — {e['question'][:60]} (제출 {started})",
+                          expanded=len(pend) == 1):
+            st.markdown("**질문**")
             st.markdown(f"> {payload.get('질문', e['question'])}")
             st.markdown("**멈춘 이유**")
             for r in payload.get("멈춘 이유", []):
@@ -132,18 +135,33 @@ with tab_pending:
                     st.markdown(f"- {x}")
             else:
                 st.caption("(근거 사례 없음)")
-            st.markdown("**AI 판정(보고서 초안)**")
-            draft_text = payload.get("AI 판정(보고서 초안)", "")
-            st.markdown(draft_text if draft_text else "(초안 없음)")
-            st.caption("통과시키면: " + payload.get("통과시키면", ""))
 
             key_ns = e["thread_id"]
+            draft_text = payload.get("AI 판정(보고서 초안)", "")
+            toc = payload.get("목차", [])
+            section_overrides = {}
+            if kind == "기획":
+                st.markdown("**AI 판정(목차 초안 — 배정검사가 이미 고친 뒤)**")
+                st.table([{"절": t["절"], "역할": t.get("역할"), "시작문서": ", ".join(t.get("시작문서", [])),
+                           "기준자료": ", ".join(t.get("기준자료", [])), "지시": t.get("지시", "")} for t in toc])
+            else:
+                st.markdown("**AI 판정(보고서 초안)**")
+                st.markdown(draft_text if draft_text else "(초안 없음)")
+            st.caption("통과시키면: " + payload.get("통과시키면", ""))
+
             action = st.radio("결정", ["승인", "수정 후 승인", "반려", "다시 판정"],
                                horizontal=True, key=f"action-{key_ns}")
             edited = None
             reason = ""
             directive = ""
-            if action == "수정 후 승인":
+            if action == "수정 후 승인" and kind == "기획":
+                st.caption("절마다 지시문만 고쳐서 승인한다(자료 배정 자체를 바꾸려면 반려 후 다시 판정을 쓴다).")
+                for t in toc:
+                    new_instr = st.text_input(f"「{t['절']}」 지시", value=t.get("지시", ""),
+                                               key=f"instr-{key_ns}-{t['절']}")
+                    if new_instr != t.get("지시", ""):
+                        section_overrides[t["절"]] = new_instr
+            elif action == "수정 후 승인":
                 edited = st.text_area("수정본(이 내용으로 저장된다)", value=draft_text, height=300, key=f"edit-{key_ns}")
             elif action == "반려":
                 reason = st.text_input("반려 사유", key=f"reason-{key_ns}")
@@ -155,14 +173,19 @@ with tab_pending:
                 answer = {"결정": decision_map[action], "사유": reason, "지시": directive}
                 if edited is not None:
                     answer["수정본"] = edited
+                elif section_overrides:
+                    answer["수정본"] = section_overrides
                 out = hitl.resume(key_ns, e["qid"], answer)
                 st.session_state[f"resumed-{key_ns}"] = out
                 st.rerun()
 
             resumed = st.session_state.get(f"resumed-{key_ns}")
             if resumed and resumed.get("run"):
-                st.success(f"처리됨 — {resumed['out']['plan']['승인기록']['결정']} (저장: {resumed['run']})")
-            if action == "다시 판정" and directive and st.session_state.get(f"resumed-{key_ns}"):
+                rec = resumed["out"]["plan"].get("승인기록") or resumed["out"]["plan"].get("기획승인기록", {})
+                st.success(f"처리됨 — {rec.get('결정')} (저장: {resumed['run']})")
+            elif resumed and resumed.get("pending"):
+                st.info("처리됐지만 다음 게이트(또는 재기획)에서 또 멈췄다 — 목록을 새로고침해 이어서 처리한다.")
+            if action == "다시 판정" and directive and kind == "발행" and st.session_state.get(f"resumed-{key_ns}"):
                 if st.button("이 지시로 새로 실행", key=f"retry-{key_ns}"):
                     new_q = e["question"] + f"\n\n[담당자 재작성 지시] {directive}"
                     lock = run_lock()
@@ -196,6 +219,9 @@ with tab_done:
         else:
             st.caption("이 실행은 저장된 보고서가 없다(반려 또는 다시 판정 요청).")
         with st.expander("승인 기록"):
-            st.json(r.get("승인기록", {}))
+            st.markdown("**◐ 기획 게이트**")
+            st.json(r.get("기획승인기록", {}))
+            st.markdown("**⑦ 발행 게이트**")
+            st.json(r.get("승인기록", {}) or "(기획 단계에서 끝나 여기까지 안 옴)")
         with st.expander("로그"):
             st.code("\n".join(r.get("log", [])) or "(로그 없음)")

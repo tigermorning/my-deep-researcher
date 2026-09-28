@@ -1,16 +1,35 @@
 # -*- coding: utf-8 -*-
-"""HITL(사람이 승인하는) 게이트 — graph.py의 노드를 그대로 재사용하되, ⑥평가 뒤에 승인 게이트를
-하나 더 붙인 별도 그래프. graph.py 자체는 건드리지 않는다(제출 실험 118+29실행·ablation 집계
-재현성 보존 — HANDOFF.md 9절 "새 기능은 새 절을 더하거나 별도 문서로").
+"""HITL(사람이 승인하는) 게이트 — graph.py의 노드를 그대로 재사용하되, 승인 게이트 둘을 더 붙인
+별도 그래프. graph.py 자체는 건드리지 않는다(제출 실험 118+29실행·ablation 집계 재현성 보존 —
+HANDOFF.md 9절 "새 기능은 새 절을 더하거나 별도 문서로").
 
     streamlit run hitl_app.py
 
-## 결과가 바깥으로 나가는 자리
-이 프로젝트에서 "결과가 바깥으로 나간다"는 것은 조사 보고서가 output/hitl/reports/에 완결된
-실행으로 저장되어 데모 화면에 공식 결과로 노출되는 순간이다. 그 저장 직전(⑥평가 뒤)에 사람이
-막을 자리를 둔다.
+## 게이트 두 개 — 서로 다른 위험을 막는다
+"사람이 맨 끝에만 있으면 왜곡이 이미 다 일어난 뒤에야 보게 되는 것 아닌가"라는 질문에서 하나를
+더 붙였다. 그래서 이 그래프는 게이트가 둘이다.
 
-## 승인 기준 (계산 가능, 둘 다 ⑥평가·④점검이 이미 만든 신호를 그대로 읽는다 — 새 휴리스틱을 안 만든다)
+- **◐ 기획 게이트** (①기획 뒤, ②배치 전): "이 조사를 이 목차로 시작해도 되는가" — 조사에
+  청크 예산을 쓰기 **전에** 막는다. 막는 위험: 모델이 목차를 짤 때 코퍼스를 헷갈린 것
+  (존재하지 않는 자료를 배정 · 질문이 안 부른 트랙을 넣음 · 트랙과 안 맞는 규정을 기준자료로 씀).
+- **⑦ 발행 게이트** (⑥평가 뒤, 저장 전): "이 결과를 내보내도 되는가" — 이 프로젝트에서
+  "결과가 바깥으로 나간다"는 것은 조사 보고서가 output/hitl/reports/에 완결된 실행으로 저장되어
+  데모 화면에 공식 결과로 노출되는 순간이다.
+
+둘은 서로 다른 위험을 막는다 — 기획 게이트가 통과해도(목차가 멀쩡해도) 조사 중에 원문을 잘못
+읽거나 종합이 뜻을 비틀 수 있어 발행 게이트가 따로 필요하고, 반대로 발행 게이트만 있으면 이미
+잘못 배정된 목차로 청크 예산을 다 쓴 뒤에야 사람이 그 사실을 안다(비용 낭비 + 결국 사람이
+완성된 긴 보고서를 처음부터 다시 읽어야 왜곡을 찾음 — 헛읽기).
+
+## 기획 게이트 기준 (①기획의 배정검사 check_plan이 이미 잡아낸 신호만 읽는다)
+- 무효배정(목록에 없는 제목을 배정) · 질문밖트랙(질문이 안 부른 트랙을 넣음) · 규정불일치
+  (트랙과 안 맞는 규정을 기준자료로 씀) 중 하나라도 있으면 멈춘다.
+- **일부러 위험 신호로 안 쓰는 것**: 필수채움·절로승격·합친절. 이 셋은 배정검사가 거의 매번
+  하는 정상적인 보정이라(예: 트랙 종류별 필수 규정을 자동으로 채워 넣는 것) 위험 신호로 쓰면
+  거의 모든 실행에서 멈춰 헛멈춤만 늘어난다 — 강의 3강이 경고한 "헛멈춤 많으면 담당자가 내용을
+  안 보고 도장만 찍는다"를 피하려고 골라냈다.
+
+## 발행 게이트 기준 (⑥평가·④점검이 이미 만든 신호를 그대로 읽는다)
 - **인용 위험**: metrics['허위인용'] 또는 metrics['범위밖큐']가 0보다 크다
   — 막는 위험: 인용(«»·큐 번호)이 원문과 안 맞는 채로 보고서가 나가는 것. 인용대조(check_quotes)가
   이미 자동으로 고치거나 지웠지만, 그래도 남은 경보는 사람이 원문과 대조해야 한다.
@@ -18,6 +37,8 @@
   — 막는 위험: 조사관 스스로 "아직 부족하다"고 신고했는데 재위임 바퀴 상한에 걸려 그대로
   종합되는 것. 이 신호가 없는 절(충분: True로 끝났거나, 애초에 재위임이 필요 없었던 절)은 AI가
   스스로 충분하다고 확인했으므로 사람이 안 봐도 된다.
+
+두 게이트 다 새 휴리스틱을 안 만든다 — 이미 graph.py가 계산해 두던 신호만 읽는다.
 """
 import contextlib
 import datetime
@@ -34,7 +55,78 @@ ROOT = g.ROOT
 OUT = ROOT / "output" / ("hitl_sample" if g.SAMPLE else "hitl")
 
 
-# ---------------------------------------------------------------- ⑦ 승인 게이트
+# ---------------------------------------------------------------- ◐ 기획 게이트
+REPLAN_MARK = "[담당자 재기획 지시]"
+REPLAN_CAP = 1   # "다시 판정"을 실제로 되돌리는 최대 횟수 — 넘으면 그대로 진행(무한 루프 방지)
+
+
+def _plan_reasons(s):
+    """기획 위험 판정 — LLM 호출 없음, ①기획의 배정검사(check_plan)가 이미 잡아 둔 것만 본다."""
+    p = s.get("plan") or {}
+    fixes = {k: p.get(k, []) for k in ("무효배정", "질문밖트랙", "규정불일치")}
+    names = {"무효배정": "목록에 없는 제목을 배정함", "질문밖트랙": "질문이 안 부른 트랙을 넣음",
+             "규정불일치": "트랙과 안 맞는 규정을 기준자료로 넣음"}
+    reasons = [("기획 위험", f"{names[k]}: {', '.join(map(str, v))}") for k, v in fixes.items() if v]
+    return reasons, fixes
+
+
+def plan_gate(s):
+    """①기획 뒤, ②배치(조사 시작) 전에 멈춘다. interrupt() 앞은 순수 계산(_plan_reasons)만
+    — 재개 시 이 노드도 처음부터 다시 실행되므로 부작용을 앞에 두지 않는다(⑦ gate와 같은 원칙)."""
+    reasons, fixes = _plan_reasons(s)
+    p = s["plan"]
+    if not reasons:
+        return {"plan": {**p, "기획승인기록": {"결정": "자동통과", "사유": "", "지시": "", "멈춘이유": []}},
+                "log": ["◐ 기획승인   배정검사가 고칠 게 없음 — 자동 통과"]}
+    toc_view = [{"절": t["절"], "역할": t.get("역할"), "시작문서": t.get("시작문서", []),
+                 "기준자료": t.get("기준자료", []), "지시": t.get("지시", "")} for t in p["목차"]]
+    payload = {
+        "종류": "기획",
+        "질문": s["question"],
+        "멈춘 이유": [f"{label} — {desc}" for label, desc in reasons],
+        "근거": [f"{k}: {v}" for k, v in fixes.items() if v],
+        "목차": toc_view,
+        "통과시키면": "이 목차 그대로 ② 배치부터 조사가 시작된다(청크 예산이 실제로 소비된다)",
+    }
+    answer = interrupt(payload)
+    decision = (answer or {}).get("결정") or "반려"
+    replans_so_far = s["question"].count(REPLAN_MARK)
+    if decision == "다시판정" and replans_so_far >= REPLAN_CAP:
+        directive = (answer or {}).get("지시", "")
+        record = {"결정": "승인", "사유": f"재기획 상한 도달 — 지시 '{directive}'는 반영 못 하고 그대로 진행",
+                   "지시": "", "멈춘이유": [f"{label} — {desc}" for label, desc in reasons]}
+        return {"plan": {**p, "기획승인기록": record},
+                "log": [f"◐ 기획승인   승인 ({record['사유']})"]}
+    if decision == "다시판정":
+        directive = (answer or {}).get("지시", "")
+        record = {"결정": decision, "사유": "", "지시": directive,
+                  "멈춘이유": [f"{label} — {desc}" for label, desc in reasons]}
+        return {"question": f"{s['question']}\n\n{REPLAN_MARK} {directive}",
+                "plan": {**p, "기획승인기록": record},
+                "log": [f"◐ 기획승인   다시판정 — {directive}"]}
+    if decision == "수정후승인" and (answer or {}).get("수정본"):
+        overrides = answer["수정본"]
+        toc = [dict(t) for t in p["목차"]]
+        for t in toc:
+            if t["절"] in overrides:
+                t["지시"] = overrides[t["절"]]
+        p = {**p, "목차": toc}
+    record = {"결정": decision, "사유": (answer or {}).get("사유", ""), "지시": "",
+              "멈춘이유": [f"{label} — {desc}" for label, desc in reasons]}
+    line = f"◐ 기획승인   {decision}" + (f" ({record['사유']})" if record["사유"] else "")
+    return {"plan": {**p, "기획승인기록": record}, "log": [line]}
+
+
+def route_plan_gate(s):
+    rec = s["plan"].get("기획승인기록", {})
+    if rec.get("결정") == "다시판정":
+        return "plan"
+    if rec.get("결정") == "반려":
+        return END
+    return "dispatch"
+
+
+# ---------------------------------------------------------------- ⑦ 발행 게이트
 def _reasons(s):
     """두 승인 기준을 판정한다. LLM 호출 없음 — ⑥평가·④점검이 이미 계산해 둔 신호만 읽는다."""
     m, p = s.get("metrics") or {}, s.get("plan") or {}
@@ -77,6 +169,7 @@ def gate(s):
         return {"plan": {**s["plan"], "승인기록": {"결정": "자동통과", "사유": "", "지시": "", "멈춘이유": []}},
                 "log": ["⑦ 승인   기준에 안 걸림 — 자동 통과"]}
     payload = {
+        "종류": "발행",
         "질문": s["question"],
         "멈춘 이유": [f"{label} — {desc}" for label, desc in reasons],
         "근거": _evidence(s)[:20],
@@ -115,9 +208,11 @@ def build(checkpointer=None):
     graph_ = StateGraph(g.State)
     for name in ["plan", "dispatch", "researcher", "review", "synthesize", "evaluate"]:
         graph_.add_node(name, getattr(g, name))
+    graph_.add_node("plan_gate", plan_gate)
     graph_.add_node("gate", gate)
     graph_.add_edge(START, "plan")
-    graph_.add_edge("plan", "dispatch")
+    graph_.add_edge("plan", "plan_gate")
+    graph_.add_conditional_edges("plan_gate", route_plan_gate, ["plan", "dispatch", END])
     graph_.add_conditional_edges("dispatch", g.fanout, ["researcher", "review"])
     graph_.add_edge("researcher", "review")
     graph_.add_conditional_edges("review", g.route, ["dispatch", "synthesize"])
@@ -146,13 +241,24 @@ def _registry_add(entry):
 
 def save_result(out, thread_id, qid):
     """결정이 승인·수정후승인·자동통과면 보고서를 저장한다. 반려·다시판정은 감사 기록(runs/*.json)만
-    남기고 output/hitl/reports/에는 안 올린다 — 그 실행은 '공식 결과'가 아니다."""
-    decision = out["plan"].get("승인기록", {}).get("결정", "자동통과")
+    남기고 output/hitl/reports/에는 안 올린다 — 그 실행은 '공식 결과'가 아니다.
+    기획 게이트에서 반려되면 조사 자체가 시작 안 돼 '승인기록'(발행 게이트 몫)이 아예 없다 —
+    이 경우는 metrics·report 없이 기획 단계 감사 기록만 남긴다."""
+    plan_rec = out["plan"].get("기획승인기록", {})
+    gate_rec = out["plan"].get("승인기록")
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     name = f"{qid}_{thread_id.split('-')[-1]}_{stamp}"
     (OUT / "runs").mkdir(parents=True, exist_ok=True)
+    if gate_rec is None:
+        decision = f"기획{plan_rec.get('결정', '반려')}"
+        row = {"run": name, "thread_id": thread_id, "qid": qid, "question": out["question"], "decision": decision,
+               "기획승인기록": plan_rec, "metrics": {}, "log": out.get("log", []),
+               "plan": {k: v for k, v in out["plan"].items() if not k.startswith("_") and k != "채택"}}
+        (OUT / "runs" / f"{name}.json").write_text(json.dumps(row, ensure_ascii=False, indent=1), encoding="utf-8")
+        return name
+    decision = gate_rec.get("결정", "자동통과")
     row = {"run": name, "thread_id": thread_id, "qid": qid, "question": out["question"], "decision": decision,
-           "승인기록": out["plan"].get("승인기록", {}), "metrics": out.get("metrics", {}), "log": out.get("log", []),
+           "기획승인기록": plan_rec, "승인기록": gate_rec, "metrics": out.get("metrics", {}), "log": out.get("log", []),
            "plan": {k: v for k, v in out["plan"].items() if not k.startswith("_") and k != "채택"}}
     if decision in ("자동통과", "승인", "수정후승인"):
         import metrics   # 보고서 파일에는 작품 제목에서 트랙 종류를 뗀 표기로(graph.save와 같은 규칙)

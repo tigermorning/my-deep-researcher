@@ -33,10 +33,14 @@ def draft(n_cites, doc):
 
 
 class FakeLLM:
-    """test_review.py의 FakeLLM과 같은 대본 방식(절 이름 → 바퀴마다 집필 결과 목록)."""
+    """test_review.py의 FakeLLM과 같은 대본 방식(절 이름 → 바퀴마다 집필 결과 목록).
+    bad_ref=True면 목차에 코퍼스에 없는 제목을 하나 끼워 배정검사가 '무효배정'으로 잡게 한다
+    (기획 게이트 시험용) — 담당자 지시(재기획 마크)가 붙어도 대본은 그대로 안 바뀐다(모델이
+    실제로 지시를 반영하는지는 이 가짜로는 확인 못 함 — 재기획 상한만 시험한다)."""
 
-    def __init__(self, script):
+    def __init__(self, script, bad_ref=False):
         self.script = script
+        self.bad_ref = bad_ref
         self.writes = {A: 0, B: 0}
         self.calls = 0
 
@@ -46,8 +50,9 @@ class FakeLLM:
             g.COST["calls"] += 1
             g.COST[f"{who}_chars"] += len(prompt)
         if '"목차"' in prompt:
+            refs_a = [RULE_KO, "없는 문서"] if self.bad_ref else [RULE_KO]
             return {"목차": [
-                {"절": A, "역할": "관행 담당", "시작문서": [SDH_KO], "기준자료": [RULE_KO], "지시": "화자·효과음 표기를 모은다"},
+                {"절": A, "역할": "관행 담당", "시작문서": [SDH_KO], "기준자료": refs_a, "지시": "화자·효과음 표기를 모은다"},
                 {"절": B, "역할": "관행 담당", "시작문서": [SDH_EN], "기준자료": [RULE_EN], "지시": "화자·효과음 표기를 모은다"}]}
         if '"원고"' in prompt and '"충분"' in prompt:
             hit = [n for n in (A, B) if n in prompt]
@@ -86,9 +91,9 @@ class HitlGateTest(unittest.TestCase):
         hitl._saver = None
         self._tmp.cleanup()
 
-    def start(self, script, qid="test", **switch):
+    def start(self, script, qid="test", bad_ref=False, **switch):
         g.설정["스위치"].update(switch)
-        g.ask = FakeLLM(script)
+        g.ask = FakeLLM(script, bad_ref=bad_ref)
         return hitl.start(QUESTION, qid)
 
     def test_clean_run_auto_passes_and_saves(self):
@@ -148,6 +153,69 @@ class HitlGateTest(unittest.TestCase):
         pend = {e["thread_id"] for e in hitl.pending_threads()}
         self.assertIn(r1["thread_id"], pend)
         self.assertNotIn(r2["thread_id"], pend)
+
+    # ---------------------------------------------------------------- ◐ 기획 게이트
+    CLEAN_SCRIPT = {A: [{"원고": draft(2, SDH_KO), "충분": True, "부족": ""}],
+                     B: [{"원고": draft(2, SDH_EN), "충분": True, "부족": ""}]}
+
+    def test_plan_gate_auto_passes_when_clean(self):
+        """배정검사가 고칠 게 없으면 기획 게이트도 사람을 안 거친다."""
+        r = self.start(self.CLEAN_SCRIPT)
+        self.assertFalse(r["pending"])
+        self.assertEqual(r["out"]["plan"]["기획승인기록"]["결정"], "자동통과")
+
+    def test_plan_gate_interrupts_on_bad_ref(self):
+        """목차에 코퍼스에 없는 제목이 섞이면(무효배정) 조사 시작 전에 멈춘다."""
+        r = self.start(self.CLEAN_SCRIPT, bad_ref=True)
+        self.assertTrue(r["pending"])
+        payload = hitl.peek(r["thread_id"])["payload"]
+        self.assertEqual(payload["종류"], "기획")
+        self.assertIn("없는 문서", " ".join(payload["근거"]))
+        self.assertIn("목차", payload)
+
+    def test_plan_gate_approve_lets_research_continue(self):
+        """승인하면 그 목차로 조사가 이어지고, 문제 없으면 끝까지 가서 저장된다."""
+        r = self.start(self.CLEAN_SCRIPT, bad_ref=True)
+        r2 = hitl.resume(r["thread_id"], "test", {"결정": "승인"})
+        self.assertFalse(r2["pending"])
+        self.assertEqual(r2["out"]["plan"]["기획승인기록"]["결정"], "승인")
+        self.assertIsNotNone(r2["run"])
+        self.assertTrue((hitl.OUT / "reports" / f"{r2['run']}.md").exists())
+
+    def test_plan_gate_reject_stops_before_research(self):
+        """기획 게이트에서 반려하면 조사(청크 읽기) 자체가 시작 안 된다 — LLM 호출이 안 늘어난다."""
+        r = self.start(self.CLEAN_SCRIPT, bad_ref=True)
+        calls_at_pause = g.ask.calls
+        r2 = hitl.resume(r["thread_id"], "test", {"결정": "반려", "사유": "«없는 문서»는 실재하지 않는다"})
+        self.assertFalse(r2["pending"])
+        self.assertEqual(g.ask.calls, calls_at_pause, "반려 후엔 추가 LLM 호출(조사)이 없어야 한다")
+        row = hitl.saved_runs()[r2["run"]]
+        self.assertEqual(row["decision"], "기획반려")
+        self.assertEqual(row["metrics"], {})
+        self.assertNotIn("report_file", row)
+        self.assertFalse((hitl.OUT / "reports").exists())
+
+    def test_plan_gate_edit_overrides_section_instruction(self):
+        """수정 후 승인이면 담당자가 고친 절별 지시문이 실제로 반영된다."""
+        r = self.start(self.CLEAN_SCRIPT, bad_ref=True)
+        r2 = hitl.resume(r["thread_id"], "test", {"결정": "수정후승인", "수정본": {A: "고친 지시문"}})
+        self.assertFalse(r2["pending"])
+        sec = next(t for t in r2["out"]["plan"]["목차"] if t["절"] == A)
+        self.assertEqual(sec["지시"], "고친 지시문")
+
+    def test_plan_gate_replan_cap_then_proceeds(self):
+        """같은 무효배정이 재기획 뒤에도 남으면 한 번만 되돌리고, 그다음은 상한에 걸려 그대로 진행한다
+        (가짜 LLM은 지시를 실제로 반영 못 하므로 두 번째도 같은 무효배정이 남는 걸 확인하는 시험)."""
+        r = self.start(self.CLEAN_SCRIPT, bad_ref=True)
+        self.assertTrue(r["pending"])
+        r2 = hitl.resume(r["thread_id"], "test", {"결정": "다시판정", "지시": "«없는 문서» 빼고 다시 짜라"})
+        self.assertTrue(r2["pending"], "재기획해도 같은 무효배정이 남아 다시 멈춰야 한다")
+        self.assertEqual(hitl.peek(r["thread_id"])["payload"]["종류"], "기획")
+        r3 = hitl.resume(r["thread_id"], "test", {"결정": "다시판정", "지시": "그래도 빼라"})
+        self.assertFalse(r3["pending"], "재기획 상한을 넘으면 다시판정 요청도 그대로 진행돼야 한다")
+        self.assertEqual(r3["out"]["plan"]["기획승인기록"]["결정"], "승인")
+        self.assertIn("상한", r3["out"]["plan"]["기획승인기록"]["사유"])
+        self.assertIsNotNone(r3["run"])
 
 
 if __name__ == "__main__":
