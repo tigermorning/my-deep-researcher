@@ -34,9 +34,13 @@
 | `scripts/export_index.py` | `corpus.json` → `corpus_index.json`(본문 제외) |
 | `scripts/capture_demo.py` | README용 데모 화면 캡처(지난 실행 두 장 · 실행 중 진행 표시 한 장) |
 | `tests/test_review.py` | 가짜 LLM으로 그래프 전체를 돌려 ④ 점검(재위임·채택 규칙)을 시험 — API 호출 없음 |
+| `hitl.py` | HITL 승인 게이트 — graph.py의 노드를 그대로 재사용하되 ⑥ 평가 뒤에 사람 승인(⑦)을 하나 더 붙인 별도 그래프(10강 프로젝트, REPORT.md 12절) |
+| `hitl_app.py` | HITL streamlit 데모(승인 대기 목록 · 승인 화면 · 완료된 실행) |
+| `tests/test_hitl.py` | 가짜 LLM으로 HITL 게이트(자동통과·승인·반려·수정후승인·대기 목록)를 시험 — API 호출 없음 |
 | `output/` | `runs.jsonl` · `ablation.json` · `ablation.md` · `reports/` (v2, 118실행) |
 | `output/v1/` | 첫 판 104실행 기록(고치기 전 비교용) |
 | `output/sample/` | 예시 코퍼스 실행 결과(본 실험과 분리) |
+| `output/hitl/` · `output/hitl_sample/` | HITL 데모 실행 결과 — 위 `output/`의 제출 실험 집계와 분리 |
 
 ## 무엇을 재현할 수 있나
 
@@ -92,8 +96,10 @@ DR_SAMPLE=1 streamlit run app.py
 - Python 3.12, 패키지
 
 ```bash
-pip install langgraph openai tiktoken streamlit
+pip install langgraph openai tiktoken streamlit langgraph-checkpoint-sqlite
 ```
+
+- `langgraph-checkpoint-sqlite`는 HITL 데모(아래 "HITL(사람 승인) 데모" 절)에만 쓴다. `graph.py`·`app.py`는 그대로다
 
 - OpenAI 키: 환경변수 `OPENAI_API_KEY` → 저장소의 `.env` → `~/Documents/openai_key.env` 순으로 찾음
   - `.env`는 gitignore. 키를 저장소에 올리지 않음
@@ -166,6 +172,23 @@ PYTHONIOENCODING=utf-8 python -m unittest discover -s tests -v
   - 가짜 LLM이 대본대로 답하고, 진짜 OpenAI 클라이언트는 부르면 바로 실패하게 막아 둠
   - 보는 것: 재작성본의 유효 인용이 줄거나 비면 지난 원고를 지킴(되돌림) · 늘면 새 원고 채택 · 바퀴 상한에서 멈춤 · 재위임 스위치를 끄면 실제로 1바퀴 · 가짜 실행도 ⑥ 평가까지 가고 호출 수가 가짜가 받은 수와 같음
   - 규칙을 일부러 망가뜨려(항상 덮어쓰기 · 스위치 무시 · 상한 없음 · 되돌릴 때 읽은 청크 안 넘김) 네 경우 모두 테스트가 실패하는 것을 확인함
+  - `test_hitl.py`: 경보 없으면 자동 통과 · 바퀴 소진+부족 신고면 멈춤 · 승인/수정후승인/반려 세 갈래 · 대기 목록이 처리된 건을 빼는지
+
+## HITL(사람 승인) 데모 (10강 프로젝트)
+
+기존 파이프라인(위 "실행")은 그대로 두고, ⑥ 평가 뒤에 승인 게이트(⑦)를 하나 더 붙인 별도
+그래프(`hitl.py`)로 돈다. 설계·승인 기준·실행 결과는 [REPORT.md 12절](REPORT.md#12-hitl사람-승인-게이트-10강-프로젝트).
+
+```bash
+streamlit run hitl_app.py
+# 예시 코퍼스로: DR_SAMPLE=1 streamlit run hitl_app.py
+```
+
+- 왼쪽에서 질문을 골라 새로 실행 → 승인 기준(인용 위험 · 미흡 위험)에 안 걸리면 그대로
+  `output/hitl/reports/`에 저장, 걸리면 "승인 대기" 탭에서 멈춘다
+- 대기 중인 건을 열면: 질문 · 멈춘 이유 · 근거(문제 문장·부족 신고 사유) · AI가 쓴 보고서 초안 ·
+  통과시키면 무슨 일이 일어나는지가 보이고, 승인 / 수정 후 승인 / 반려 / 다시 판정 중 하나를 고른다
+- 저장 위치는 `output/hitl/`(예시 코퍼스는 `output/hitl_sample/`) — 제출 실험 집계(`output/reports/`·`output/runs.jsonl`)와 분리
 
 ## 데모 화면
 
@@ -188,3 +211,4 @@ PYTHONIOENCODING=utf-8 python -m unittest discover -s tests -v
 - 저장소에 올리지 않는 것: `data/corpus.json` · `data/raw/` · `output/runs/` · `output/v1/runs/`(조사관 메모 = 자막 발췌) · `.env`
 - 예시 코퍼스와 그 실행 기록(`output/sample/runs/` 메모 포함)은 지어낸 자료라 올린다
 - 보고서 속 자막 인용은 짧은 대사 단위
+- HITL 체크포인터(`output/hitl*/checkpoints.sqlite*`)는 절마다 통째 State(자막 발췌 포함)를 담으므로 올리지 않는다 — `output/hitl/runs/*.json`은 승인 기록·로그·지표만 남겨(원문 발췌 제외) 올려도 된다

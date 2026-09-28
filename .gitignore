@@ -7,6 +7,14 @@ output/v1/runs/
 output/v2-baseline-old/runs/
 *.lock
 
+# HITL 체크포인터 — 절마다 통째 State(자막 발췌 포함)를 담는 런타임 DB, 커밋 대상 아님
+output/hitl/checkpoints.sqlite*
+output/hitl_sample/checkpoints.sqlite*
+
+# 로컬 전용 Claude Code 설정
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
 # 비밀
 .env
 *.env
