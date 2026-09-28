@@ -234,12 +234,15 @@ def history(thread_id):
 
 
 def saved_runs():
-    """output/hitl/runs/*.json 전체 — 완료(자동통과·승인·수정후승인·반려·다시판정 기록 포함)."""
+    """output/hitl/runs/*.json 전체 — 완료(자동통과·승인·수정후승인·반려·다시판정 기록 포함).
+    최신 실행이 먼저 오도록 파일 수정 시각으로 정렬한다(run 이름은 qid_thread_시각 순이라
+    qid로 시작해 문자열 정렬로는 최신순이 안 된다 — 예: 'q11_...'이 'q10_...'보다 항상 앞섬)."""
     d = OUT / "runs"
     if not d.exists():
         return {}
+    files = sorted(d.glob("*.json"), key=lambda f: f.stat().st_mtime, reverse=True)
     rows = {}
-    for f in d.glob("*.json"):
+    for f in files:
         r = json.loads(f.read_text(encoding="utf-8"))
         rows[r["run"]] = r
-    return dict(sorted(rows.items(), reverse=True))
+    return rows

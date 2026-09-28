@@ -190,6 +190,10 @@ streamlit run hitl_app.py
   통과시키면 무슨 일이 일어나는지가 보이고, 승인 / 수정 후 승인 / 반려 / 다시 판정 중 하나를 고른다
 - 저장 위치는 `output/hitl/`(예시 코퍼스는 `output/hitl_sample/`) — 제출 실험 집계(`output/reports/`·`output/runs.jsonl`)와 분리
 
+![HITL 승인 대기 화면](docs/hitl_demo_pending.png)
+
+![HITL 완료된 실행 화면](docs/hitl_demo_done.png)
+
 ## 데모 화면
 
 - 지난 실행을 고르거나 새로 실행(질문 · 팀/대조군 · 스위치)
