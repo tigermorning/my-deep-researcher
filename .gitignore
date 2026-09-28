@@ -21,3 +21,6 @@ output/hitl_sample/checkpoints.sqlite*
 
 __pycache__/
 .venv/
+
+# 데모 서버 실행 설정 — 로컬 전용(사용자 결정, HANDOFF.md 6-7절)
+.claude/launch.json
