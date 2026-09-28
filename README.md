@@ -196,6 +196,8 @@ streamlit run hitl_app.py
   후 승인 / 반려 / 다시 판정 중 하나를 고른다
 - 저장 위치는 `output/hitl/`(예시 코퍼스는 `output/hitl_sample/`) — 제출 실험 집계(`output/reports/`·`output/runs.jsonl`)와 분리
 
+![HITL 승인 게이트 흐름도](docs/hitl_gate_flow.svg)
+
 ![HITL 기획 게이트 승인 대기 화면](docs/hitl_demo_plangate.png)
 
 ![HITL 발행 게이트 승인 대기 화면](docs/hitl_demo_pending.png)
