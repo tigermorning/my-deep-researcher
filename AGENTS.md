@@ -6,8 +6,11 @@
 
 ## 확인 명령
 - 한글 출력: `PYTHONIOENCODING=utf-8` 필수(Windows cp949)
-- 시험(API 호출 없음): `PYTHONIOENCODING=utf-8 python -m unittest discover -s tests -v`
-- 한 질문 `python graph.py q03` · 대조군 `python baseline.py q03` · 절제 실험 `python ablation.py` · 데모 `streamlit run app.py`
+- 고친 뒤 돌릴 것(모두 API 호출 없음, 2026-11-20 실행해 확인)
+  - 전체 시험: `PYTHONIOENCODING=utf-8 python -m unittest discover -s tests -v` → `Ran 17 tests` · `OK`(약 1초)
+  - 시험 하나만: `PYTHONIOENCODING=utf-8 python -m unittest tests.test_review.ReviewLoopTest.test_round_cap_stops_loop`
+  - 문법 검사(시험이 안 닿는 `app.py`·`scripts/` 포함): `python -m py_compile *.py scripts/*.py tests/*.py` → 출력 없음
+- OpenAI API를 불러 비용이 드는 것(사용자가 시킬 때만): 한 질문 `python graph.py q03` · 대조군 `python baseline.py q03` · 절제 실험 `python ablation.py` · 기획 검사 `python scripts/check_plans.py` · 데모 `streamlit run app.py`
 - 코퍼스 빌드 `python scripts/build_corpus.py`(원본이 이 PC 로컬과 D 드라이브에만 있음)
 
 ## 건드리면 안 되는 것
